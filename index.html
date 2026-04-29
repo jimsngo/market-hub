@@ -1,207 +1,261 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
-    <title>Surgical Command | April 2026</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Surgical Hub | Tactical Command</title>
     <style>
-        :root { --bg: #0b0f19; --card-bg: #161b2c; --text: #f1f5f9; --text-dim: #64748b; --accent: #3b82f6; --bullish: #4ade80; --bearish: #f87171; --caution: #fbbf24; }
-        body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); color: var(--text); padding: 30px; display: flex; flex-direction: column; align-items: center; }
-        .container { max-width: 1200px; width: 100%; }
-        .section-header { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.15em; color: var(--accent); margin: 25px 0 12px; border-bottom: 1px solid #2d3748; padding-bottom: 8px; font-weight: 700; }
-        .data-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; margin-bottom: 30px; }
-        .cell { background: var(--card-bg); padding: 18px; border-radius: 10px; border: 1px solid #2d3748; text-align: center; cursor: pointer; transition: 0.2s; }
-        .cell:hover { border-color: var(--accent); }
-        .cell.active { border-color: var(--accent); box-shadow: 0 0 15px rgba(59, 130, 246, 0.25); border-width: 2px; }
-        .val { font-size: 1.4rem; font-weight: 900; margin: 5px 0; }
-        .sub { font-size: 0.75rem; color: var(--text-dim); line-height: 1.5; }
-        .analysis-box { display: grid; grid-template-columns: 1.6fr 1fr; gap: 25px; background: var(--card-bg); padding: 30px; border-radius: 12px; border: 1px solid #2d3748; }
-        .big-stat-container { border-left: 1px solid #2d3748; padding-left: 25px; text-align: center; display: flex; flex-direction: column; justify-content: center; }
-        .big-stat { font-size: 3rem; font-weight: 900; line-height: 1; }
-        .news-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
-        .news-item { background: rgba(22, 27, 44, 0.6); padding: 15px; border-radius: 8px; border-left: 4px solid var(--caution); font-size: 0.85rem; line-height: 1.5; }
-        .news-item span { color: var(--caution); font-weight: 800; font-size: 0.7rem; display: block; margin-bottom: 5px; text-transform: uppercase; }
-        .news-item a { color: var(--text); text-decoration: none; }
-        button { padding: 12px 24px; background: var(--accent); border: none; color: white; border-radius: 6px; cursor: pointer; font-weight: 700; transition: 0.2s; }
-        button:disabled { background: #475569; }
+        :root {
+            --bg: #0b0f19;
+            --card-bg: #161b2c;
+            --text: #f1f5f9;
+            --text-dim: #64748b;
+            --accent: #3b82f6;
+            --bullish: #4ade80;
+            --bearish: #f87171;
+            --caution: #fbbf24;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 0;
+        }
+
+        .container {
+            max-width: 1200px;
+            width: 100%;
+        }
+
+        /* HEADER */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+        }
+
+        .header h1 {
+            margin: 0;
+            font-weight: 900;
+            font-size: 1.5rem;
+            letter-spacing: -0.02em;
+        }
+
+        .sync-box {
+            text-align: right;
+        }
+
+        #timestamp {
+            color: var(--text-dim);
+            font-size: 0.7rem;
+            margin-bottom: 4px;
+            font-family: monospace;
+        }
+
+        button {
+            padding: 10px 20px;
+            background: var(--accent);
+            border: none;
+            color: white;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 700;
+            transition: all 0.2s ease;
+        }
+
+        button:hover {
+            filter: brightness(1.2);
+            transform: translateY(-1px);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        button:disabled {
+            background: #475569;
+            cursor: not-allowed;
+        }
+
+        /* SECTIONS */
+        .section-header {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            color: var(--accent);
+            margin: 25px 0 12px;
+            border-bottom: 1px solid #2d3748;
+            padding-bottom: 8px;
+            font-weight: 800;
+        }
+
+        /* DATA GRID */
+        .data-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+            gap: 12px;
+            margin-bottom: 25px;
+        }
+
+        .cell {
+            background: var(--card-bg);
+            padding: 16px;
+            border-radius: 10px;
+            border: 1px solid #2d3748;
+            text-align: center;
+            cursor: pointer;
+            transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+        }
+
+        .cell:hover {
+            border-color: var(--accent);
+            background: #1e253a;
+        }
+
+        .cell.active {
+            border-color: var(--accent);
+            box-shadow: 0 0 20px rgba(59, 130, 246, 0.15);
+            border-width: 2px;
+            background: #1e253a;
+        }
+
+        .val {
+            font-size: 1.4rem;
+            font-weight: 900;
+            margin: 4px 0;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .sub {
+            font-size: 0.7rem;
+            color: var(--text-dim);
+            line-height: 1.7;
+            text-transform: uppercase;
+            font-weight: 600;
+        }
+
+        /* ANALYSIS AREA */
+        .analysis-box {
+            display: grid;
+            grid-template-columns: 1.5fr 1fr;
+            gap: 24px;
+            background: var(--card-bg);
+            padding: 24px;
+            border-radius: 12px;
+            border: 1px solid #2d3748;
+            min-height: 180px;
+        }
+
+        .big-stat-container {
+            border-left: 1px solid #2d3748;
+            padding-left: 24px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .big-stat {
+            font-size: 3.2rem;
+            font-weight: 900;
+            line-height: 1;
+            margin: 12px 0;
+        }
+
+        @media (max-width: 768px) {
+            .analysis-box {
+                grid-template-columns: 1fr;
+                padding: 20px;
+            }
+
+            .big-stat-container {
+                border-left: none;
+                border-top: 1px solid #2d3748;
+                padding-top: 20px;
+                padding-left: 0;
+            }
+        }
     </style>
 </head>
+
 <body>
 
-<div class="container">
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-        <h1 style="margin:0; font-weight: 900;">Surgical Intelligence <span style="color:var(--accent)">Hub</span></h1>
-        <div style="text-align: right;">
-            <div id="timestamp" style="color: var(--text-dim); font-size: 0.75rem; margin-bottom: 5px;">Last Sync: --:--:--</div>
-            <button id="sync-btn" onclick="syncData()">REFRESH THEATRE</button>
+    <div class="container">
+        <div class="header">
+            <h1>Surgical <span style="color:var(--accent)">Hub</span></h1>
+            <div class="sync-box">
+                <div id="timestamp">Last Sync: --:--:--</div>
+                <button id="sync-btn" onclick="triggerSync()">REFRESH THEATRE</button>
+            </div>
+        </div>
+
+        <div class="section-header">Market Matrix (30D Hybrid Logic)</div>
+        <div id="data-grid" class="data-grid"></div>
+
+        <div class="section-header">Interrogation (<span id="active-ticker">--</span>)</div>
+        <div class="analysis-box">
+            <div id="analysis-narrative" style="line-height: 1.7; font-size: 0.95rem;">Initializing modules... Select an
+                index to begin interrogation.</div>
+            <div class="big-stat-container">
+                <div id="stat-label" class="sub" style="font-weight: 800; color: var(--accent);">Value Gap</div>
+                <div id="big-stat-val" class="big-stat">--</div>
+                <div id="breadth-val" class="sub" style="font-weight: 700; letter-spacing: 0.05em;">Participation: --
+                </div>
+            </div>
+        </div>
+        <div class="section-header">Live Intelligence Feed</div>
+        <div id="news-tape"
+            style="background:var(--card-bg); padding:20px; border-radius:12px; border:1px solid #2d3748; max-height:200px; overflow-y:auto;">
+            Awaiting macro feed...
         </div>
     </div>
 
-    <div class="section-header">Section 1: Market Matrix & Technical Momentum</div>
-    <div id="data-grid" class="data-grid"></div>
+    <script type="module">
+        import { loadConstants } from './js/config.js';
+    import { fetchMarketData } from './js/engine.js';
+    import { renderAll, selectTicker } from './js/ui.js';
 
-    <div class="section-header">Section 2: Dynamic Interrogation (<span id="active-ticker">--</span>)</div>
-    <div class="analysis-box">
-        <div id="analysis-narrative" style="line-height: 1.8;">Select an asset for deep-dive audit...</div>
-        <div class="big-stat-container">
-            <div id="stat-label" class="label">Value Gap</div>
-            <div id="big-stat-val" class="big-stat">--</div>
-            <div id="breadth-val" class="sub" style="margin-top:15px; font-weight: 600;">Participation: --</div>
-        </div>
-    </div>
+    // Global binding for HTML onclick events
+    window.selectTicker = (s) => selectTicker(s);
 
-    <div class="section-header">Section 3: Global Macro Wire (Filtered Headlines)</div>
-    <div id="news-grid" class="news-grid"></div>
-</div>
-
-<script>
-    const PROXY = "https://corsproxy.io/?";
-    let selectedTicker = localStorage.getItem('lastTicker') || "IWM";
-
-    const indexConfigs = {
-        "SPY": { pe: 24.5, sma200: 645.20, smi10: 18.5, breadth: "68% > EMA20" },
-        "QQQ": { pe: 32.1, sma200: 412.50, smi10: 5.2, breadth: "54% > EMA20" },
-        "IWM": { pe: 20.85, sma200: 224.10, smi10: -12.4, breadth: "31% > EMA20" },
-        "DIA": { pe: 18.2, sma200: 442.80, smi10: 2.1, breadth: "49% > EMA20" },
-        "VXX": { pe: 0, sma200: 15.20, smi10: 42.0, breadth: "Volatility Contango" }
-    };
-
-    window.onload = () => {
-        const cached = localStorage.getItem('surgicalData');
-        if (cached) renderAll(JSON.parse(cached));
-        else syncData();
-    };
-
-    async function syncData() {
+    window.triggerSync = async () => {
         const btn = document.getElementById('sync-btn');
-        if (btn) { btn.innerText = "SYNCING..."; btn.disabled = true; }
-
-        const symbols = ["SPY", "DIA", "QQQ", "IWM", "VXX", "%5ETNX"];
-        let results = { indices: {}, yield: 0, news: [] };
+        btn.innerText = "SYNCING...";
+        btn.disabled = true;
 
         try {
-            // 1. Market Data Fetch
-            for (let sym of symbols) {
-                const res = await fetch(`${PROXY}https://query1.finance.yahoo.com/v8/finance/chart/${sym}?interval=1m&range=1d`);
-                const json = await res.json();
-                const meta = json.chart.result[0].meta;
-                const ticker = sym.replace('%5E', '');
-                if (ticker === "TNX") results.yield = meta.regularMarketPrice;
-                else results.indices[ticker] = { price: meta.regularMarketPrice, change: ((meta.regularMarketPrice - meta.chartPreviousClose) / meta.chartPreviousClose * 100).toFixed(2) + "%" };
-                await new Promise(r => setTimeout(r, 600));
-            }
-
-            // 2. Multi-Sector RSS Fetch
-            const rssRes = await fetch(`${PROXY}https://finance.yahoo.com/news/rssindex`);
-            const rssText = await rssRes.text();
-            const xml = new DOMParser().parseFromString(rssText, "text/xml");
-            const items = Array.from(xml.querySelectorAll("item"));
-            
-            // EXPANDED SECTOR FILTERS
-            const sectors = [
-                { label: "ENERGY/OIL", keys: ["oil", "energy", "hormuz", "brent", "crude"] },
-                { label: "FED/MACRO", keys: ["fed", "powell", "fomc", "yield", "inflation"] },
-                { label: "BITCOIN/ALT", keys: ["bitcoin", "btc", "crypto", "digital asset"] },
-                { label: "GOLD/METALS", keys: ["gold", "silver", "metals", "precious"] }
-            ];
-
-            results.news = [];
-            
-            // Find the best match for each sector
-            sectors.forEach(sec => {
-                const match = items.find(item => {
-                    const title = item.querySelector("title")?.textContent.toLowerCase() || "";
-                    return sec.keys.some(k => title.includes(k));
-                });
-                
-                if (match) {
-                    results.news.push({
-                        cat: sec.label,
-                        title: match.querySelector("title").textContent,
-                        link: match.querySelector("link").textContent
-                    });
-                }
-            });
-
-            // Fallback for empty sectors
-            if (results.news.length < 2) {
-                results.news.push({ cat: "MARKET", title: "Global markets brace for Fed decision and energy volatility.", link: "#" });
-            }
-
-            results.ts = new Date().toLocaleTimeString();
-            localStorage.setItem('surgicalData', JSON.stringify(results));
-            renderAll(results);
-        } catch (e) { console.error("Sync Failure:", e); }
-        finally { if (btn) { btn.innerText = "REFRESH THEATRE"; btn.disabled = false; } }
-    }
-
-    function renderAll(data) {
-        if (!data || !data.indices) return;
-        document.getElementById('timestamp').innerText = "Last Sync: " + data.ts;
-
-        // SECTION 1: DATA MATRIX
-        const grid = document.getElementById('data-grid');
-        grid.innerHTML = Object.entries(data.indices).map(([s, v]) => {
-            const config = indexConfigs[s];
-            
-            // TACTICAL COLOR LOGIC
-            const changeColor = v.change.includes('-') ? 'var(--bearish)' : 'var(--bullish)';
-            const smaColor = v.price > config.sma200 ? 'var(--bullish)' : 'var(--bearish)';
-            
-            // SMI10: Oversold (< -10) = Bullish potential (Green), Overbought (> 35) = Bearish (Red)
-            let smiColor = 'var(--text)';
-            if (config.smi10 < -10) smiColor = 'var(--bullish)';
-            else if (config.smi10 > 35) smiColor = 'var(--bearish)';
-
-            return `
-                <div class="cell ${s === selectedTicker ? 'active' : ''}" onclick="selectTicker('${s}')">
-                    <div class="label">${s} | <span style="color:${changeColor}">${v.change}</span></div>
-                    <div class="val">${v.price.toFixed(2)}</div>
-                    <div class="sub" style="border-top: 1px solid #2d3748; margin-top:8px; padding-top:5px;">
-                        SMA200: <span style="color:${smaColor}; font-weight:bold;">${v.price > config.sma200 ? 'ABOVE' : 'BELOW'}</span><br>
-                        SMI10: <span style="color:${smiColor}; font-weight:bold;">${config.smi10}</span>
-                    </div>
-                </div>
-            `;
-        }).join('') + `
-            <div class="cell" style="cursor:default; border-color: var(--caution);">
-                <div class="label">10Y TREASURY</div>
-                <div class="val" style="color:var(--caution)">${data.yield.toFixed(2)}%</div>
-                <div class="sub">Gravity Threshold: 4.25%</div>
-            </div>
-        `;
-
-        updateDetail(data);
-
-        // SECTION 3: NEWS WIRE
-        const newsGrid = document.getElementById('news-grid');
-        if (data.news && Array.isArray(data.news)) {
-            newsGrid.innerHTML = data.news.map(n => `
-                <div class="news-item">
-                    <span>${n.cat || 'MACRO'}</span>
-                    <a href="${n.link || '#'}" target="_blank">${n.title || 'Headline Unavailable'}</a>
-                </div>
-            `).join('');
+            const symbols = ["SPY", "DIA", "QQQ", "IWM", "VXX", "%5ETNX"];
+            const data = await fetchMarketData(symbols);
+            localStorage.setItem('surgicalData', JSON.stringify(data));
+            renderAll(data);
+        } catch (e) {
+            console.error("Sync Error:", e);
+        } finally {
+            btn.innerText = "REFRESH THEATRE";
+            btn.disabled = false;
         }
-    }
-    function selectTicker(s) {
-        selectedTicker = s;
-        localStorage.setItem('lastTicker', s);
-        const cached = localStorage.getItem('surgicalData');
-        if (cached) renderAll(JSON.parse(cached));
-    }
+    };
 
-    function updateDetail(data) {
-        const s = selectedTicker;
-        const config = indexConfigs[s];
-        const gap = config.pe > 0 ? ((1 / config.pe) * 100) - data.yield : 0;
-        document.getElementById('active-ticker').innerText = s;
-        document.getElementById('stat-label').innerText = s + " Value Gap";
-        document.getElementById('big-stat-val').innerText = config.pe > 0 ? gap.toFixed(2) + "%" : "HEDGE";
-        document.getElementById('big-stat-val').style.color = gap > 1.0 ? "var(--bullish)" : (gap === 0 ? 'var(--caution)' : 'var(--bearish)');
-        document.getElementById('breadth-val').innerText = "Participation: " + config.breadth;
-        document.getElementById('analysis-narrative').innerHTML = `<p><strong>Audit:</strong> ${s} is trending <strong>${data.indices[s].price > config.sma200 ? 'above' : 'below'}</strong> its SMA200.</p>
-            <p><strong>Yield Pressure:</strong> At <strong>${data.yield.toFixed(2)}%</strong>, the 10Y continues to set the ceiling.</p>`;
-    }
+    window.onload = async () => {
+        await loadConstants();
+        const cached = localStorage.getItem('surgicalData');
+        if (cached) {
+            renderAll(JSON.parse(cached));
+        } else {
+            window.triggerSync();
+        }
+    };
 </script>
+
 </body>
+
 </html>
