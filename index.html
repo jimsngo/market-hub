@@ -143,59 +143,29 @@
     import { fetchMarketData, fetchNews } from './js/engine.js';
     import { renderAll, selectTicker } from './js/ui.js';
 
-    // Global Bindings
     window.selectTicker = (s) => selectTicker(s);
+    let lastRequestTime = 0;
 
-    // FETCH NEWS ONLY
-    window.triggerNews = async () => {
-        const btn = document.getElementById('intel-btn');
-        btn.innerText = "FETCHING...";
-        try {
-            const news = await fetchNews();
-            const currentData = JSON.parse(localStorage.getItem('surgicalData')) || {indices:{}, yield:0};
-            currentData.news = news;
-            localStorage.setItem('surgicalData', JSON.stringify(currentData));
-            renderAll(currentData);
-        } catch (e) { console.error(e); }
-        btn.innerText = "Intel Only";
-    };
-
-    // FULL MARKET SYNC
     window.triggerSync = async () => {
+        const now = Date.now();
+        if (now - lastRequestTime < 30000) return;
         const btn = document.getElementById('sync-btn');
-        btn.innerText = "SYNCING...";
-        btn.disabled = true;
+        btn.innerText = "SYNCING..."; btn.disabled = true;
         try {
             const symbols = ["SPY", "DIA", "QQQ", "IWM", "VXX", "%5ETNX"];
             const data = await fetchMarketData(symbols);
-            
-            // Persist the news already in cache if new news isn't fetched
-            const cachedNews = JSON.parse(localStorage.getItem('surgicalNews')) || [];
-            data.news = (data.news && data.news.length > 0) ? data.news : cachedNews;
-            
+            lastRequestTime = Date.now();
             localStorage.setItem('surgicalData', JSON.stringify(data));
             renderAll(data);
         } catch (e) { console.error(e); }
-        btn.innerText = "Refresh Theatre";
-        btn.disabled = false;
+        btn.innerText = "Refresh Theatre"; btn.disabled = false;
     };
 
     window.onload = async () => {
-    // Load your constants first (P/E ratios, SMA200)
-    await loadConstants();
-    
-    // Check the vault
-    const cached = localStorage.getItem('surgicalData');
-    
-    if (cached) {
-        // Instant visual populate from your iMac's disk
-        renderAll(JSON.parse(cached));
-        console.log("Surgical Hub: State restored from disk. 0 API requests made.");
-    } else {
-        // Only happens the very first time you ever use the app
-        console.log("Surgical Hub: Clean slate. Awaiting your first manual sync.");
-    }
-};
+        await loadConstants();
+        const cached = localStorage.getItem('surgicalData');
+        if (cached) renderAll(JSON.parse(cached));
+    };
 </script>
 
 </body>
