@@ -1,83 +1,109 @@
-const PROXY = "https://corsproxy.io/?";
+const PROXY = "https://script.google.com/macros/s/AKfycbwG5Bz_OwwRLQIEDQwDHu9nLgd35fGyx-VdpveJNbVXqpnNzRYyMAmXdsgo3OcK-gYo/exec?url=";
+
+/**
+ * HELPER: Robust JSON parser that handles Google's double-quoting
+ */
+function surgicalParse(text) {
+    try {
+        let clean = text;
+        if (typeof clean === 'string' && (clean.startsWith('"') || clean.startsWith("'"))) {
+            clean = JSON.parse(clean);
+        }
+        return typeof clean === 'string' ? JSON.parse(clean) : clean;
+    } catch (e) {
+        return null;
+    }
+}
 
 export async function fetchNews() {
     try {
-        // Updated to a robust World/Macro Finance RSS
-        const rssUrl = 'https://www.yahoo.com/news/rss/finance';
-        const res = await fetch(`${PROXY}${encodeURIComponent(rssUrl)}`);
+        const target = 'https://finance.yahoo.com/news/rss';
+        const res = await fetch(`${PROXY}${encodeURIComponent(target)}`);
         const text = await res.text();
-        const parser = new DOMParser();
-        const xml = parser.parseFromString(text, "text/xml");
+        const xml = new DOMParser().parseFromString(text, "text/xml");
         const items = xml.querySelectorAll("item");
         
-        // Expanded "Institutional Filter" keywords
-        const macroKeywords = [
-            'FED', 'POWELL', 'INFLATION', 'YIELD', 'RATE', 'CENTRAL BANK',
-            'OIL', 'CRUDE', 'ENERGY', 'GAS', 'SUPPLY', 'DOLLAR', 'USD',
-            'GEOPOLITICAL', 'WAR', 'STRAIT', 'GOLD', 'BITCOIN', 'CRYPTO',
-            'GDP', 'TREASURY', 'STIMULUS', 'DEBT', 'ECONOMY'
-        ];
+        const macroKeywords = ['FED', 'POWELL', 'INFLATION', 'RATE', 'OIL', 'ENERGY', 'GEOPOLITICAL', 'GOLD', 'BITCOIN', 'MARKET'];
 
         const news = Array.from(items).map(item => ({
-            title: item.querySelector("title").textContent,
-            link: item.querySelector("link").textContent,
-            time: new Date(item.querySelector("pubDate").textContent).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+            title: item.querySelector("title")?.textContent || "Breaking Intel",
+            link: item.querySelector("link")?.textContent || "#",
+            time: new Date(item.querySelector("pubDate")?.textContent).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
         })).filter(n => {
-            const upperTitle = n.title.toUpperCase();
-            // Pass the item if it hits a macro keyword OR covers general market trends
-            return macroKeywords.some(keyword => upperTitle.includes(keyword)) || 
-                   upperTitle.includes("MARKET") || upperTitle.includes("STOCKS");
-        }).slice(0, 5);
+            const upper = n.title.toUpperCase();
+            return macroKeywords.some(k => upper.includes(k));
+        }).slice(0, 6);
 
-        return news.length > 0 ? news : [{title: "Waiting for Macro Volatility...", link: "#", time: "--:--"}];
+        localStorage.setItem('surgicalNews', JSON.stringify(news));
+        return news;
     } catch (e) {
-        console.error("Macro News Fetch Error:", e);
-        return [{title: "Intelligence Feed Offline", link: "#", time: "ERR"}];
+        return JSON.parse(localStorage.getItem('surgicalNews')) || [];
     }
 }
 
 export async function fetchMarketData(symbols) {
-    let results = { indices: {}, yield: 0, news: [] };
-    
-    // Fetch News in parallel with market data
+    let results = { indices: {}, yield: 0 };
     results.news = await fetchNews();
 
     for (let sym of symbols) {
-        try {
-            const res = await fetch(`${PROXY}https://query1.finance.yahoo.com/v8/finance/chart/${sym}?range=1mo&interval=1d`);
-            const json = await res.json();
-            const result = json.chart.result[0];
-            
-            const timestamps = result.timestamp;
-            const quote = result.indicators.quote[0];
-            const validData = timestamps.map((ts, i) => ({
-                c: quote.close[i], h: quote.high[i], l: quote.low[i]
-            })).filter(d => d.c !== null);
+        let attempts = 0;
+        let success = false;
 
-            const cur = result.meta.regularMarketPrice;
-            const ticker = sym.replace('%5E', '');
-
-            if (ticker === "TNX") {
-                results.yield = cur;
-            } else {
-                const p1wk = validData[validData.length - 6]?.c || validData[0].c;
-                const p2wk = validData[validData.length - 11]?.c || validData[0].c;
+        while (attempts < 2 && !success) {
+            try {
+                const url = `https://query1.finance.yahoo.com/v8/finance/chart/${sym}?range=1mo&interval=1d&corsDomain=finance.yahoo.com`;
+                const response = await fetch(`${PROXY}${encodeURIComponent(url)}`);
+                const text = await response.text();
                 
-                const sliceH = validData.slice(-14).map(d => d.h);
-                const sliceL = validData.slice(-14).map(d => d.l);
-                const range = (Math.max(...sliceH) - Math.min(...sliceL)) || 1;
-                const center = (Math.max(...sliceH) + Math.min(...sliceL)) / 2;
+                const raw = surgicalParse(text);
+                
+                // DATA HUNTER: Check for existence of the result array
+                if (!raw || !raw.chart || !raw.chart.result || !raw.chart.result[0]) {
+                    throw new Error("Bad Structure");
+                }
 
-                results.indices[ticker] = {
-                    price: cur,
-                    change: ((cur - result.meta.chartPreviousClose) / result.meta.chartPreviousClose * 100).toFixed(2) + "%",
-                    pw: cur > p1wk ? "UP" : "DN", 
-                    conf: (cur > p1wk && p1wk > p2wk) ? "C/UP" : (cur < p1wk && p1wk < p2wk ? "C/DN" : "NEUT"),
-                    smi: Math.round(((cur - center) / (range / 2)) * 100)
-                };
+                const res = raw.chart.result[0];
+                const meta = res.meta;
+                const timestamps = res.timestamp || [];
+                const indicators = res.indicators.quote[0];
+
+                // Ensure we have valid price data
+                const validData = timestamps.map((ts, i) => ({
+                    c: indicators.close[i], 
+                    h: indicators.high[i], 
+                    l: indicators.low[i]
+                })).filter(d => d.c !== null && d.c !== undefined);
+
+                if (validData.length === 0) throw new Error("Empty Data");
+
+                const cur = meta.regularMarketPrice;
+                const ticker = sym.replace('%5ETNX', 'TNX').replace('%5E', '').toUpperCase();
+
+                if (ticker === "TNX") {
+                    results.yield = cur;
+                } else {
+                    const p1wk = validData[validData.length - 6]?.c || validData[0].c;
+                    const p2wk = validData[validData.length - 11]?.c || validData[0].c;
+                    const sliceH = validData.slice(-14).map(d => d.h);
+                    const sliceL = validData.slice(-14).map(d => d.l);
+                    const range = (Math.max(...sliceH) - Math.min(...sliceL)) || 1;
+                    const center = (Math.max(...sliceH) + Math.min(...sliceL)) / 2;
+
+                    results.indices[ticker] = {
+                        price: cur,
+                        change: ((cur - meta.chartPreviousClose) / meta.chartPreviousClose * 100).toFixed(2) + "%",
+                        pw: cur > p1wk ? "UP" : "DN", 
+                        conf: (cur > p1wk && p1wk > p2wk) ? "C/UP" : (cur < p1wk && p1wk < p2wk ? "C/DN" : "NEUT"),
+                        smi: Math.round(((cur - center) / (range / 2)) * 100)
+                    };
+                }
+                success = true;
+            } catch (err) {
+                attempts++;
+                if (attempts === 2) console.warn(`[FINAL FAIL] ${sym}: ${err.message}`);
+                await new Promise(r => setTimeout(r, 1000)); // Wait before retry
             }
-        } catch (err) { console.error(err); }
-        await new Promise(r => setTimeout(r, 600));
+        }
     }
     results.ts = new Date().toLocaleTimeString();
     return results;

@@ -1,261 +1,202 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Surgical Hub | Tactical Command</title>
     <style>
-        :root {
-            --bg: #0b0f19;
-            --card-bg: #161b2c;
-            --text: #f1f5f9;
-            --text-dim: #64748b;
-            --accent: #3b82f6;
-            --bullish: #4ade80;
-            --bearish: #f87171;
-            --caution: #fbbf24;
+        :root { 
+            --bg: #0b0f19; 
+            --card-bg: #161b2c; 
+            --text: #f1f5f9; 
+            --text-dim: #64748b; 
+            --accent: #3b82f6; 
+            --bullish: #4ade80; 
+            --bearish: #f87171; 
+            --caution: #fbbf24; 
         }
 
-        body {
-            font-family: 'Inter', -apple-system, sans-serif;
-            background: var(--bg);
-            color: var(--text);
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
+        body { 
+            font-family: 'Inter', -apple-system, sans-serif; 
+            background: var(--bg); 
+            color: var(--text); 
+            padding: 20px; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
             margin: 0;
         }
 
-        .container {
-            max-width: 1200px;
-            width: 100%;
-        }
+        .container { max-width: 1200px; width: 100%; }
 
-        /* HEADER */
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 15px;
+        /* HEADER & CONTROLS */
+        .header { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            margin-bottom: 15px; 
             padding-bottom: 10px;
         }
+        .header h1 { margin: 0; font-weight: 900; font-size: 1.5rem; letter-spacing: -0.02em; }
+        .sync-box { text-align: right; display: flex; align-items: center; gap: 10px; }
+        #timestamp { color: var(--text-dim); font-size: 0.7rem; font-family: monospace; }
 
-        .header h1 {
-            margin: 0;
-            font-weight: 900;
-            font-size: 1.5rem;
-            letter-spacing: -0.02em;
-        }
-
-        .sync-box {
-            text-align: right;
-        }
-
-        #timestamp {
-            color: var(--text-dim);
-            font-size: 0.7rem;
-            margin-bottom: 4px;
-            font-family: monospace;
-        }
-
-        button {
-            padding: 10px 20px;
-            background: var(--accent);
-            border: none;
-            color: white;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: 700;
+        button { 
+            padding: 10px 18px; 
+            background: var(--accent); 
+            border: none; 
+            color: white; 
+            border-radius: 6px; 
+            cursor: pointer; 
+            font-weight: 700; 
+            font-size: 0.75rem;
             transition: all 0.2s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
         }
-
-        button:hover {
-            filter: brightness(1.2);
-            transform: translateY(-1px);
-        }
-
-        button:active {
-            transform: translateY(0);
-        }
-
-        button:disabled {
-            background: #475569;
-            cursor: not-allowed;
-        }
+        button:hover { filter: brightness(1.2); }
+        button:disabled { background: #475569; cursor: not-allowed; }
+        .btn-intel { background: #1e293b; border: 1px solid #334155; }
 
         /* SECTIONS */
-        .section-header {
-            font-size: 0.75rem;
-            text-transform: uppercase;
-            letter-spacing: 0.15em;
-            color: var(--accent);
-            margin: 25px 0 12px;
-            border-bottom: 1px solid #2d3748;
-            padding-bottom: 8px;
-            font-weight: 800;
+        .section-header { 
+            font-size: 0.7rem; 
+            text-transform: uppercase; 
+            letter-spacing: 0.15em; 
+            color: var(--accent); 
+            margin: 25px 0 12px; 
+            border-bottom: 1px solid #2d3748; 
+            padding-bottom: 8px; 
+            font-weight: 800; 
         }
 
-        /* DATA GRID */
-        .data-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
-            gap: 12px;
-            margin-bottom: 25px;
+        /* GRID & CELLS */
+        .data-grid { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); 
+            gap: 12px; 
+            margin-bottom: 25px; 
         }
-
-        .cell {
-            background: var(--card-bg);
-            padding: 16px;
-            border-radius: 10px;
-            border: 1px solid #2d3748;
-            text-align: center;
-            cursor: pointer;
-            transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-            position: relative;
+        .cell { 
+            background: var(--card-bg); 
+            padding: 16px; 
+            border-radius: 10px; 
+            border: 1px solid #2d3748; 
+            text-align: center; 
+            cursor: pointer; 
+            transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1); 
         }
+        .cell:hover { border-color: var(--accent); }
+        .cell.active { border-color: var(--accent); border-width: 2px; background: #1e253a; box-shadow: 0 0 15px rgba(59, 130, 246, 0.1); }
+        .val { font-size: 1.4rem; font-weight: 900; margin: 4px 0; }
+        .sub { font-size: 0.7rem; color: var(--text-dim); line-height: 1.6; text-align: left; border-top: 1px solid #2d3748; margin-top: 8px; padding-top: 8px; }
 
-        .cell:hover {
-            border-color: var(--accent);
-            background: #1e253a;
-        }
+        /* ANALYSIS & NEWS */
+        .dashboard-row { display: grid; grid-template-columns: 1.5fr 1fr; gap: 20px; }
+        .box { background: var(--card-bg); padding: 20px; border-radius: 12px; border: 1px solid #2d3748; }
+        
+        .big-stat { font-size: 3rem; font-weight: 900; line-height: 1; margin: 10px 0; }
+        #news-tape { max-height: 250px; overflow-y: auto; font-size: 0.85rem; }
+        .news-item { margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid #2d3748; }
+        .news-item a { color: var(--text); text-decoration: none; font-weight: 500; }
+        .news-item a:hover { color: var(--accent); }
 
-        .cell.active {
-            border-color: var(--accent);
-            box-shadow: 0 0 20px rgba(59, 130, 246, 0.15);
-            border-width: 2px;
-            background: #1e253a;
-        }
-
-        .val {
-            font-size: 1.4rem;
-            font-weight: 900;
-            margin: 4px 0;
-            font-variant-numeric: tabular-nums;
-        }
-
-        .sub {
-            font-size: 0.7rem;
-            color: var(--text-dim);
-            line-height: 1.7;
-            text-transform: uppercase;
-            font-weight: 600;
-        }
-
-        /* ANALYSIS AREA */
-        .analysis-box {
-            display: grid;
-            grid-template-columns: 1.5fr 1fr;
-            gap: 24px;
-            background: var(--card-bg);
-            padding: 24px;
-            border-radius: 12px;
-            border: 1px solid #2d3748;
-            min-height: 180px;
-        }
-
-        .big-stat-container {
-            border-left: 1px solid #2d3748;
-            padding-left: 24px;
-            text-align: center;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-        }
-
-        .big-stat {
-            font-size: 3.2rem;
-            font-weight: 900;
-            line-height: 1;
-            margin: 12px 0;
-        }
-
-        @media (max-width: 768px) {
-            .analysis-box {
-                grid-template-columns: 1fr;
-                padding: 20px;
-            }
-
-            .big-stat-container {
-                border-left: none;
-                border-top: 1px solid #2d3748;
-                padding-top: 20px;
-                padding-left: 0;
-            }
-        }
+        @media (max-width: 768px) { .dashboard-row { grid-template-columns: 1fr; } }
     </style>
 </head>
-
 <body>
 
-    <div class="container">
-        <div class="header">
-            <h1>Surgical <span style="color:var(--accent)">Hub</span></h1>
-            <div class="sync-box">
-                <div id="timestamp">Last Sync: --:--:--</div>
-                <button id="sync-btn" onclick="triggerSync()">REFRESH THEATRE</button>
-            </div>
-        </div>
-
-        <div class="section-header">Market Matrix (30D Hybrid Logic)</div>
-        <div id="data-grid" class="data-grid"></div>
-
-        <div class="section-header">Interrogation (<span id="active-ticker">--</span>)</div>
-        <div class="analysis-box">
-            <div id="analysis-narrative" style="line-height: 1.7; font-size: 0.95rem;">Initializing modules... Select an
-                index to begin interrogation.</div>
-            <div class="big-stat-container">
-                <div id="stat-label" class="sub" style="font-weight: 800; color: var(--accent);">Value Gap</div>
-                <div id="big-stat-val" class="big-stat">--</div>
-                <div id="breadth-val" class="sub" style="font-weight: 700; letter-spacing: 0.05em;">Participation: --
-                </div>
-            </div>
-        </div>
-        <div class="section-header">Live Intelligence Feed</div>
-        <div id="news-tape"
-            style="background:var(--card-bg); padding:20px; border-radius:12px; border:1px solid #2d3748; max-height:200px; overflow-y:auto;">
-            Awaiting macro feed...
+<div class="container">
+    <div class="header">
+        <h1>Surgical <span style="color:var(--accent)">Hub</span></h1>
+        <div class="sync-box">
+            <span id="timestamp">LAST SYNC: --:--</span>
+            <button id="intel-btn" class="btn-intel" onclick="triggerNews()">Intel Only</button>
+            <button id="sync-btn" onclick="triggerSync()">Refresh Theatre</button>
         </div>
     </div>
 
-    <script type="module">
-        import { loadConstants } from './js/config.js';
-    import { fetchMarketData } from './js/engine.js';
+    <div class="section-header">Market Matrix</div>
+    <div id="data-grid" class="data-grid"></div>
+
+    <div class="dashboard-row">
+        <div>
+            <div class="section-header">Interrogation (<span id="active-ticker">--</span>)</div>
+            <div class="box" style="display: flex; gap: 25px; align-items: center;">
+                <div id="analysis-narrative" style="flex: 1; line-height: 1.8;">Select an index to begin.</div>
+                <div style="text-align: center; border-left: 1px solid #2d3748; padding-left: 25px;">
+                    <div style="font-size: 0.65rem; color: var(--accent); font-weight: 800;">VALUE GAP</div>
+                    <div id="big-stat-val" class="big-stat">--</div>
+                    <div id="breadth-val" style="font-size: 0.7rem; font-weight: 700;">PTCP: --</div>
+                </div>
+            </div>
+        </div>
+        <div>
+            <div class="section-header">Live Intel Feed</div>
+            <div id="news-tape" class="box">Awaiting macro pulse...</div>
+        </div>
+    </div>
+</div>
+
+<script type="module">
+    import { loadConstants } from './js/config.js';
+    import { fetchMarketData, fetchNews } from './js/engine.js';
     import { renderAll, selectTicker } from './js/ui.js';
 
-    // Global binding for HTML onclick events
+    // Global Bindings
     window.selectTicker = (s) => selectTicker(s);
 
+    // FETCH NEWS ONLY
+    window.triggerNews = async () => {
+        const btn = document.getElementById('intel-btn');
+        btn.innerText = "FETCHING...";
+        try {
+            const news = await fetchNews();
+            const currentData = JSON.parse(localStorage.getItem('surgicalData')) || {indices:{}, yield:0};
+            currentData.news = news;
+            localStorage.setItem('surgicalData', JSON.stringify(currentData));
+            renderAll(currentData);
+        } catch (e) { console.error(e); }
+        btn.innerText = "Intel Only";
+    };
+
+    // FULL MARKET SYNC
     window.triggerSync = async () => {
         const btn = document.getElementById('sync-btn');
         btn.innerText = "SYNCING...";
         btn.disabled = true;
-
         try {
             const symbols = ["SPY", "DIA", "QQQ", "IWM", "VXX", "%5ETNX"];
             const data = await fetchMarketData(symbols);
+            
+            // Persist the news already in cache if new news isn't fetched
+            const cachedNews = JSON.parse(localStorage.getItem('surgicalNews')) || [];
+            data.news = (data.news && data.news.length > 0) ? data.news : cachedNews;
+            
             localStorage.setItem('surgicalData', JSON.stringify(data));
             renderAll(data);
-        } catch (e) {
-            console.error("Sync Error:", e);
-        } finally {
-            btn.innerText = "REFRESH THEATRE";
-            btn.disabled = false;
-        }
+        } catch (e) { console.error(e); }
+        btn.innerText = "Refresh Theatre";
+        btn.disabled = false;
     };
 
     window.onload = async () => {
-        await loadConstants();
-        const cached = localStorage.getItem('surgicalData');
-        if (cached) {
-            renderAll(JSON.parse(cached));
-        } else {
-            window.triggerSync();
-        }
-    };
+    // Load your constants first (P/E ratios, SMA200)
+    await loadConstants();
+    
+    // Check the vault
+    const cached = localStorage.getItem('surgicalData');
+    
+    if (cached) {
+        // Instant visual populate from your iMac's disk
+        renderAll(JSON.parse(cached));
+        console.log("Surgical Hub: State restored from disk. 0 API requests made.");
+    } else {
+        // Only happens the very first time you ever use the app
+        console.log("Surgical Hub: Clean slate. Awaiting your first manual sync.");
+    }
+};
 </script>
 
 </body>
-
 </html>
