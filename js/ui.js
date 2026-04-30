@@ -23,18 +23,24 @@ function renderDashboard(data) {
     grid.innerHTML = Object.entries(data.indices).map(([s, v]) => {
         const config = indexConfigs[s] || { pe: 0 };
         const isTNX = s === 'TNX';
-        const chgColor = parseFloat(v.change) >= 0 ? 'var(--bullish)' : 'var(--bearish)';
-        const smaColor = parseFloat(v.price) > parseFloat(v.sma50) ? 'var(--bullish)' : 'var(--bearish)';
         
+        // Logic for determining Bullish vs Bearish color
+        const isPositive = parseFloat(v.change) >= 0;
+        const trendColor = isPositive ? 'var(--bullish)' : 'var(--bearish)';
+        
+        const smaColor = parseFloat(v.price) > parseFloat(v.sma50) ? 'var(--bullish)' : 'var(--bearish)';
         const finalGap = (v.valueGap && v.valueGap !== "N/A") ? v.valueGap : "N/A";
+        
         const smiBg = getSMIBackground(v.smi);
         const borderColor = v.smi >= 0 ? 'rgba(74, 222, 128, 0.3)' : 'rgba(248, 113, 113, 0.3)';
 
         return `
             <div class="cell ${s === lastTicker ? 'active' : ''}" onclick="selectTicker('${s}')" 
                  style="background-color: ${smiBg}; border-color: ${s === lastTicker ? 'var(--accent)' : borderColor}">
-                <div class="label">${isTNX ? '10Y YIELD' : s} | <span style="color:${chgColor}">${v.change}</span></div>
-                <div class="val">${isTNX ? v.price + '%' : '$' + v.price}</div>
+                <div class="label">${isTNX ? '10Y YIELD' : s} | <span style="color:${trendColor}">${v.change}</span></div>
+                
+                <div class="val" style="color:${trendColor}">${isTNX ? v.price + '%' : '$' + v.price}</div>
+                
                 <div class="sub">
                     SMA50: <strong style="color:${smaColor}">${parseFloat(v.price) > parseFloat(v.sma50) ? 'BULLISH' : 'BEARISH'}</strong><br>
                     SMI10: <strong style="color:${v.smi >= 0 ? 'var(--bullish)' : 'var(--bearish)'}">${v.smi}</strong><br>
@@ -46,7 +52,6 @@ function renderDashboard(data) {
             </div>`;
     }).join('');
 
-    // Renders news feed line-by-line
     const newsBox = document.getElementById('news-tape');
     if (newsBox && data.news && data.news.length > 0) {
         newsBox.innerHTML = data.news.map(n => `
