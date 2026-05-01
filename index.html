@@ -28,7 +28,7 @@
 
         <div style="margin-top:30px;">
             <div class="section-header">Live Intel Feed</div>
-            <div id="news-tape" class="box" style="padding: 15px; min-height: 50px;"></div>
+            <div id="news-tape" style="background:#0a0a0a; padding:15px; border-radius:8px; border:1px solid #222;"></div>
         </div>
     </div>
 
@@ -66,11 +66,8 @@
             grid.innerHTML = Object.entries(data.indices).map(([ticker, val]) => {
                 const gapNum = parseFloat(val.valueGap);
                 const gapClass = gapNum >= 0 ? 'gap-pos' : 'gap-neg';
-                
-                // Daily Price Color Coding
                 const changeNum = parseFloat(val.dailyChange);
                 const priceColorClass = changeNum >= 0 ? 'gap-pos' : 'gap-neg';
-                
                 const smiClass = getSmiClass(val.smi);
                 return `
                 <div class="card ${val.conf.toLowerCase()}">
@@ -86,12 +83,15 @@
 
             const flowGrid = document.getElementById('money-flow-rank');
             flowGrid.innerHTML = (data.moneyFlow || []).map((s, i) => {
-                const flowColor = s.score >= 0 ? 'flow-bullish' : 'flow-bearish';
+                // Determine Flow Bar Color based on SMI
+                const flowBarClass = s.score >= 0 ? 'flow-up' : 'flow-down';
+                const scoreColor = s.score >= 0 ? 'flow-bullish' : 'flow-bearish';
+                
                 return `
-                <div class="flow-card ${i === 0 ? 'leader' : ''}">
+                <div class="flow-card ${flowBarClass} ${i === 0 ? 'leader' : ''}">
                     <div style="font-weight:bold; color:#888; margin-bottom:5px;">${s.ticker}</div>
-                    <div class="score-val ${i === 0 ? '' : flowColor}">${s.score}</div>
-                    <div style="font-size:0.65em; color:#555; letter-spacing:1px; margin-top:5px;">FLOW SCORE</div>
+                    <div class="score-val ${i === 0 ? '' : scoreColor}">${s.score}</div>
+                    <div style="font-size:0.65em; color:#555; letter-spacing:1px;">FLOW SCORE</div>
                 </div>
             `}).join('');
 

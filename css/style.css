@@ -6,7 +6,8 @@
     --red: #ff5f5f;   
     --gold: #fbbf24;
     --white: #ffffff; 
-    --news-link: #00ffff; /* Electric Cyan */
+    --news-link: #00ffff;
+    --text-dim: #888888;
 }
 
 body {
@@ -17,7 +18,7 @@ body {
     padding: 20px;
 }
 
-/* --- LEADERBOARD --- */
+/* --- SECTOR ROTATION ROW (TOP) --- */
 .flow-container {
     margin-bottom: 30px;
     background: #0a0a0a;
@@ -26,27 +27,36 @@ body {
     padding: 20px;
 }
 
+.section-header { font-size: 0.8em; text-transform: uppercase; letter-spacing: 2px; color: #666; margin-bottom: 15px; }
+
 .flow-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; }
 
+/* THE UPDATED SECTOR CARD WITH LEFT BAR */
 .flow-card {
     padding: 15px;
     border-radius: 6px;
-    text-align: center;
+    text-align: left; /* Aligned left to match main cards */
     border: 1px solid #222;
     background: #151515;
+    border-left: 4px solid transparent; /* The Thin Bar */
+    transition: 0.4s;
 }
 
+/* Color logic for the bars */
+.flow-card.flow-up { border-left-color: var(--green); }
+.flow-card.flow-down { border-left-color: var(--red); }
+
+/* The Gold Leader specific style */
 .leader {
     border: 1px solid var(--gold);
+    border-left: 4px solid var(--gold);
     background: rgba(251, 191, 36, 0.08);
     box-shadow: 0 0 15px rgba(251, 191, 36, 0.15);
 }
 
-.score-val { font-size: 1.8em; font-weight: bold; }
-.flow-bullish { color: var(--green); border-bottom: 2px solid var(--green); }
-.flow-bearish { color: var(--red); border-bottom: 2px solid var(--red); }
+.score-val { font-size: 1.8em; font-weight: bold; margin: 5px 0; }
 
-/* --- DATA GRID --- */
+/* --- DATA GRID (SYMBOLS) --- */
 .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px; }
 
 .card {
@@ -63,10 +73,10 @@ body {
 .card.up .status { background: rgba(74, 222, 128, 0.2); color: var(--green); }
 .card.down .status { background: rgba(255, 95, 95, 0.2); color: var(--red); }
 
-.price { font-size: 1.6rem; font-weight: 800; } /* Removed fixed color to allow for dynamic classes */
+.price { font-size: 1.6rem; font-weight: 800; margin: 5px 0; }
 .status { font-weight: 900; font-size: 0.75em; padding: 4px 8px; border-radius: 4px; display: inline-block; margin-top: 5px; }
 
-/* --- SMI & GAP HEATMAP --- */
+/* --- SMI & HEATMAP --- */
 .smi-up { color: var(--green); font-weight: bold; }
 .smi-down { color: var(--red); font-weight: bold; }
 .smi-ext-up { color: var(--green); text-shadow: 0 0 8px rgba(74, 222, 128, 0.6); font-weight: bold; }
@@ -77,10 +87,5 @@ body {
 
 /* --- NEWS FEED --- */
 .news-item { padding: 12px 0; border-bottom: 1px solid #222; }
-.news-item a {
-    color: var(--news-link);
-    text-decoration: none;
-    font-size: 1rem;
-    font-weight: 500;
-}
+.news-item a { color: var(--news-link); text-decoration: none; font-size: 1rem; font-weight: 500; }
 .news-item a:hover { color: var(--gold); text-decoration: underline; }
