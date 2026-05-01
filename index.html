@@ -3,68 +3,102 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Surgical Hub</title>
+    <title>Surgical Hub | Smart Money Pulse</title>
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
     <div class="theatre-container">
         <header>
-            <div class="header-left">
-                <h1>SURGICAL HUB</h1>
-                <div id="clock">00:00:00</div>
+            <div>
+                <h1 style="margin:0; letter-spacing:3px;">SURGICAL HUB</h1>
+                <div id="clock" style="color:#666;">00:00:00</div>
             </div>
-            <div class="header-right">
-                <div id="timestamp">Awaiting Sync...</div>
+            <div style="text-align:right;">
+                <div id="timestamp" style="font-size:0.8em; margin-bottom:5px; color:#444;">Awaiting Intel...</div>
                 <button id="sync-btn">Refresh Theatre</button>
             </div>
         </header>
 
+        <div class="flow-container">
+            <div class="section-header">Sector Rotation: Smart Money Footprint</div>
+            <div id="money-flow-rank" class="flow-grid"></div>
+        </div>
+
         <div id="data-grid" class="grid"></div>
 
-        <div class="dashboard-row">
+        <div style="margin-top:30px;">
             <div class="section-header">Live Intel Feed</div>
-            <div id="news-tape" class="box" style="padding: 15px; min-height: 50px;"></div>
+            <div id="news-tape" style="background:#0a0a0a; padding:15px; border-radius:8px; border:1px solid #222;"></div>
         </div>
     </div>
 
     <script src="js/config.js"></script>
     <script src="js/marketEngine.js"></script>
-    <script src="js/ui.js"></script>
-    
     <script>
+        function updateClock() { document.getElementById('clock').innerText = new Date().toLocaleTimeString(); }
+        setInterval(updateClock, 1000);
+
         async function triggerSync() {
-            console.log("%c--- Sync Sequence Initiated ---", "color: white; background: #3b82f6; padding: 2px 5px;");
             const btn = document.getElementById('sync-btn');
             btn.innerText = "SYNCING...";
-            btn.disabled = true;
             try {
-                const symbols = ["SPY", "DIA", "QQQ", "IWM", "VXX", "%5ETNX"];
+                const symbols = ["SPY", "DIA", "QQQ", "IWM", "VXX", "%5ETNX", "XLK", "XLF", "XLV", "XLY"];
                 const data = await fetchMarketData(symbols);
                 data.news = await fetchNews();
-                
-                console.log("Sync complete. Saving to Cache.");
                 localStorage.setItem('surgicalData', JSON.stringify(data));
                 renderDashboard(data);
-            } catch (e) {
-                console.error("%c[CRITICAL ERROR]", "color: red; font-weight: bold;", e);
-            }
+            } catch (e) { console.error(e); }
             btn.innerText = "Refresh Theatre";
-            btn.disabled = false;
+        }
+
+        function getSmiClass(val) {
+            if (val >= 40) return 'smi-ext-up';
+            if (val >= 0) return 'smi-up';
+            if (val <= -40) return 'smi-ext-down';
+            return 'smi-down';
+        }
+
+        function renderDashboard(data) {
+            if (!data || !data.indices) return;
+            document.getElementById('timestamp').innerText = "Last Intel Sync: " + data.ts;
+            
+            const grid = document.getElementById('data-grid');
+            grid.innerHTML = Object.entries(data.indices).map(([ticker, val]) => {
+                const gapNum = parseFloat(val.valueGap);
+                const gapClass = gapNum >= 0 ? 'gap-pos' : 'gap-neg';
+                const smiClass = getSmiClass(val.smi);
+                return `
+                <div class="card ${val.conf.toLowerCase()}">
+                    <h3>${ticker}</h3>
+                    <div class="price">$${val.price}</div>
+                    <div class="metrics">
+                        SMI: <span class="${smiClass}">${val.smi}</span> | 
+                        Gap: <span class="${gapClass}">${val.valueGap}</span>
+                    </div>
+                    <div class="status">${val.conf}</div>
+                </div>`;
+            }).join('');
+
+            const flowGrid = document.getElementById('money-flow-rank');
+            flowGrid.innerHTML = (data.moneyFlow || []).map((s, i) => {
+                const flowColor = s.score >= 0 ? 'flow-bullish' : 'flow-bearish';
+                return `
+                <div class="flow-card ${i === 0 ? 'leader' : ''}">
+                    <div style="font-weight:bold; color:#888; margin-bottom:5px;">${s.ticker}</div>
+                    <div class="score-val ${i === 0 ? '' : flowColor}">${s.score}</div>
+                    <div style="font-size:0.65em; color:#555; letter-spacing:1px; margin-top:5px;">FLOW SCORE</div>
+                </div>
+            `}).join('');
+
+            document.getElementById('news-tape').innerHTML = (data.news || []).map(n => `
+                <div class="news-item"><a href="${n.link}" target="_blank">${n.title}</a></div>
+            `).join('');
         }
 
         window.onload = () => {
-            console.log("System Online. Ready.");
-            setInterval(updateClock, 1000);
-            
             const saved = localStorage.getItem('surgicalData');
-            if (saved) {
-                console.log("Displaying cached data while refreshing intel...");
-                renderDashboard(JSON.parse(saved));
-            }
-            
-            // AUTO-SYNC: Force a fresh fetch 1 second after load to see new logs
-            setTimeout(triggerSync, 1000);
-
+            if (saved) renderDashboard(JSON.parse(saved));
+            setTimeout(triggerSync, 500);
             document.getElementById('sync-btn').onclick = triggerSync;
         };
     </script>

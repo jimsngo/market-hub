@@ -1,12 +1,21 @@
 var indexConfigs = {
     metadata: {
-        lastUpdated: "2026-04-30",
-        type: "TTM (Trailing Twelve Months)"
+        lastUpdated: "2026-05-01",
+        type: "Surgical Ratio (Option 3)"
     },
-    "SPY": { pe: 28.5 },
+    // --- MASTER INDICES ---
+    "SPY": { pe: 20.9 },   
+    "QQQ": { pe: 28.6 },   
+    "IWM": { pe: 18.4 },   
     "DIA": { pe: 23.2 },
-    "QQQ": { pe: 35.8 },
-    "IWM": { pe: 18.4 },
-    "VXX": { pe: 0 },
-    "TNX": { pe: 0 }
+
+    // --- THE BIG 4 SECTOR PULSE ---
+    "XLK": { pe: 26.8 },   // Technology
+    "XLF": { pe: 16.4 },   // Financials
+    "XLV": { pe: 18.2 },   // Health Care
+    "XLY": { pe: 24.5 },   // Consumer Discretionary
+
+    // --- RADAR & VOLATILITY ---
+    "VXX": { pe: 0 },      
+    "TNX": { pe: 0 }       
 };
