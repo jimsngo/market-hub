@@ -7,7 +7,6 @@
     --gold: #fbbf24;
     --white: #ffffff; 
     --news-link: #00ffff; /* Electric Cyan */
-    --text-dim: #888888;
 }
 
 body {
@@ -47,7 +46,7 @@ body {
 .flow-bullish { color: var(--green); border-bottom: 2px solid var(--green); }
 .flow-bearish { color: var(--red); border-bottom: 2px solid var(--red); }
 
-/* --- DATA GRID & TREND COLORS --- */
+/* --- DATA GRID --- */
 .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px; }
 
 .card {
@@ -58,22 +57,18 @@ body {
     border-left: 4px solid transparent;
 }
 
-/* Color Coding for UP/DOWN Trend */
 .card.up { border-left-color: var(--green); }
 .card.down { border-left-color: var(--red); }
 
 .card.up .status { background: rgba(74, 222, 128, 0.2); color: var(--green); }
 .card.down .status { background: rgba(255, 95, 95, 0.2); color: var(--red); }
 
-.price { font-size: 1.6rem; font-weight: 800; color: var(--white); margin: 5px 0; }
+.price { font-size: 1.6rem; font-weight: 800; } /* Removed fixed color to allow for dynamic classes */
 .status { font-weight: 900; font-size: 0.75em; padding: 4px 8px; border-radius: 4px; display: inline-block; margin-top: 5px; }
 
 /* --- SMI & GAP HEATMAP --- */
-/* These are the classes referenced in your JavaScript logic */
 .smi-up { color: var(--green); font-weight: bold; }
 .smi-down { color: var(--red); font-weight: bold; }
-
-/* Extreme Glow for SMI above 40 or below -40 */
 .smi-ext-up { color: var(--green); text-shadow: 0 0 8px rgba(74, 222, 128, 0.6); font-weight: bold; }
 .smi-ext-down { color: var(--red); text-shadow: 0 0 8px rgba(255, 95, 95, 0.6); font-weight: bold; }
 

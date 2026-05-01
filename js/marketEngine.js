@@ -19,6 +19,7 @@ async function fetchMarketData(symbols) {
                 })).filter(d => d.c !== null).slice(-50);
 
                 const last = history[history.length - 1];
+                const prev = history[history.length - 2];
                 const smaValue = history.reduce((acc, val) => acc + val.c, 0) / history.length;
                 
                 const hh = Math.max(...history.map(d => d.h));
@@ -27,8 +28,12 @@ async function fetchMarketData(symbols) {
                 const range = (hh - ll) / 2;
                 const smiValue = range !== 0 ? Math.round(((last.c - center) / range) * 100) : 0;
 
+                // Calculate Daily Change % for color-coding
+                const changePct = ((last.c - prev.c) / prev.c * 100).toFixed(2);
+
                 results.indices[ticker] = {
                     price: last.c.toFixed(2),
+                    dailyChange: changePct,
                     smi: smiValue,
                     conf: (last.c > smaValue && smiValue > 0) ? "UP" : "DOWN",
                     valueGap: "N/A"
@@ -39,6 +44,7 @@ async function fetchMarketData(symbols) {
         } catch (e) { console.error(e); }
     }
 
+    // Value Gap Math (Earnings Yield - Bond Yield)
     Object.keys(results.indices).forEach(key => {
         const cfg = indexConfigs[key];
         if (cfg && cfg.pe > 0 && key !== 'TNX') {
@@ -48,6 +54,7 @@ async function fetchMarketData(symbols) {
         }
     });
 
+    // Money Flow Sorting (Sectors Only)
     const sectors = ["XLK", "XLF", "XLV", "XLY"];
     results.moneyFlow = sectors
         .filter(s => results.indices[s])

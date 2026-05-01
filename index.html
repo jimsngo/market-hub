@@ -28,7 +28,7 @@
 
         <div style="margin-top:30px;">
             <div class="section-header">Live Intel Feed</div>
-            <div id="news-tape" style="background:#0a0a0a; padding:15px; border-radius:8px; border:1px solid #222;"></div>
+            <div id="news-tape" class="box" style="padding: 15px; min-height: 50px;"></div>
         </div>
     </div>
 
@@ -66,11 +66,16 @@
             grid.innerHTML = Object.entries(data.indices).map(([ticker, val]) => {
                 const gapNum = parseFloat(val.valueGap);
                 const gapClass = gapNum >= 0 ? 'gap-pos' : 'gap-neg';
+                
+                // Daily Price Color Coding
+                const changeNum = parseFloat(val.dailyChange);
+                const priceColorClass = changeNum >= 0 ? 'gap-pos' : 'gap-neg';
+                
                 const smiClass = getSmiClass(val.smi);
                 return `
                 <div class="card ${val.conf.toLowerCase()}">
-                    <h3>${ticker}</h3>
-                    <div class="price">$${val.price}</div>
+                    <h3 style="color:#888">${ticker}</h3>
+                    <div class="price ${priceColorClass}">$${val.price}</div>
                     <div class="metrics">
                         SMI: <span class="${smiClass}">${val.smi}</span> | 
                         Gap: <span class="${gapClass}">${val.valueGap}</span>
