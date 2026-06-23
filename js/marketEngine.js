@@ -31,9 +31,14 @@ async function fetchMarketData(symbols) {
                 // Calculate Daily Change % for color-coding
                 const changePct = ((last.c - prev.c) / prev.c * 100).toFixed(2);
 
+                // Look back exactly 5 trading sessions ago (1 calendar week) to capture true rolling momentum
+                const prev5 = history.length >= 6 ? history[history.length - 6] : history[0];
+                const change5dPct = (((last.c - prev5.c) / prev5.c) * 100).toFixed(2);
+
                 results.indices[ticker] = {
                     price: last.c.toFixed(2),
                     dailyChange: changePct,
+                    change5d: parseFloat(change5dPct), // Added for 5-day momentum tracking
                     smi: smiValue,
                     conf: (last.c > smaValue && smiValue > 0) ? "UP" : "DOWN",
                     valueGap: "N/A"

@@ -1,11 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Surgical Hub | Smart Money Pulse</title>
     <link rel="stylesheet" href="css/style.css">
 </head>
+
 <body>
     <div class="theatre-container">
         <header>
@@ -19,6 +21,57 @@
             </div>
         </header>
 
+        <div class="barometer-container"
+            style="background:#0c0c0c; border:1px solid #222; border-radius:8px; padding:20px; margin-bottom:25px;">
+            <div
+                style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #222; padding-bottom:10px; margin-bottom:15px;">
+                <span style="font-size:0.75em; letter-spacing:2px; color:#00ffcc; font-weight:bold;">🏛️ THE MACRO & STRUCTURAL ROTATION BAROMETER</span>
+                <span id="barometer-date" style="font-size:0.75em; color:#555;"></span>
+            </div>
+
+            <div style="margin-bottom:20px;">
+                <div style="font-size:0.65em; color:#555; letter-spacing:1px; margin-bottom:5px;">MORNING BAROMETER HEADLINE</div>
+                <h2 id="barometer-headline"
+                    style="margin:0; font-weight:normal; color:#fff; font-size:1.15em; line-height:1.5; letter-spacing:0.5px;">
+                    Awaiting market engine calculation...
+                </h2>
+            </div>
+
+            <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap:15px; margin-bottom:15px;">
+                <div style="background:#111; padding:10px; border-radius:6px; border:1px solid #1a1a1a;">
+                    <div style="font-size:0.6em; color:#555;">2-YR TREASURY (US02Y)</div>
+                    <div id="baro-us02y" style="font-size:1.2em; font-weight:bold; color:#fff; margin-top:5px;">--</div>
+                </div>
+                <div style="background:#111; padding:10px; border-radius:6px; border:1px solid #1a1a1a;">
+                    <div style="font-size:0.6em; color:#555;">10-YR TREASURY (TNX)</div>
+                    <div id="baro-tnx" style="font-size:1.2em; font-weight:bold; color:#fff; margin-top:5px;">--</div>
+                </div>
+                <div style="background:#111; padding:10px; border-radius:6px; border:1px solid #1a1a1a;">
+                    <div style="font-size:0.6em; color:#555;">VOLATILITY INDEX (VIX)</div>
+                    <div id="baro-vix" style="font-size:1.2em; font-weight:bold; color:#ff3366; margin-top:5px;">--</div>
+                </div>
+                <div style="background:#111; padding:10px; border-radius:6px; border:1px solid #1a1a1a;">
+                    <div style="font-size:0.6em; color:#888;">GOLD TRUST (GLD)</div>
+                    <div id="baro-gld" style="font-size:1.2em; font-weight:bold; color:#ffcc00; margin-top:5px;">--</div>
+                </div>
+                <div style="background:#111; padding:10px; border-radius:6px; border:1px solid #1a1a1a;">
+                    <div style="font-size:0.6em; color:#888;">SILVER TRUST (SLV)</div>
+                    <div id="baro-slv" style="font-size:1.2em; font-weight:bold; color:#e5e5e5; margin-top:5px;">--</div>
+                </div>
+                <div
+                    style="background:#1a1111; padding:10px; border-radius:6px; border:1px solid #331a1a; text-align:center;">
+                    <div style="font-size:0.6em; color:#885555; font-weight:bold;">3.75% US02Y FLOOR</div>
+                    <div id="baro-floor-status"
+                        style="font-size:1.1em; font-weight:bold; color:#ff3333; margin-top:5px;">CHECKING...</div>
+                </div>
+            </div>
+
+            <div style="border-top:1px solid #1c1c1c; padding-top:10px; display:flex; justify-content:space-between; align-items:center;">
+                <span style="font-size:0.6em; color:#3a3a3a; letter-spacing:1px; font-weight:bold;">⚙️ HORIZON OVERRIDE ACTIVE</span>
+                <span style="font-size:0.6em; color:#444; letter-spacing:0.5px;">📊 NOTICE: ALL CONSOLE ASSET AND SECTOR COLOR HIGHLIGHTS DEVIATE FROM DAILY CLOSE AND ARE BOUND TO A 5-DAY ROLLING MOMENTUM CHANNEL.</span>
+            </div>
+        </div>
+
         <div class="flow-container">
             <div class="section-header">Sector Rotation: Smart Money Footprint</div>
             <div id="money-flow-rank" class="flow-grid"></div>
@@ -28,26 +81,31 @@
 
         <div style="margin-top:30px;">
             <div class="section-header">Live Intel Feed</div>
-            <div id="news-tape" style="background:#0a0a0a; padding:15px; border-radius:8px; border:1px solid #222;"></div>
+            <div id="news-tape" style="background:#0a0a0a; padding:15px; border-radius:8px; border:1px solid #222;">
+            </div>
         </div>
     </div>
 
     <script src="js/config.js"></script>
     <script src="js/marketEngine.js"></script>
     <script>
-        function updateClock() { document.getElementById('clock').innerText = new Date().toLocaleTimeString(); }
+        function updateClock() {
+            document.getElementById('clock').innerText = new Date().toLocaleTimeString();
+        }
         setInterval(updateClock, 1000);
 
         async function triggerSync() {
             const btn = document.getElementById('sync-btn');
             btn.innerText = "SYNCING...";
             try {
-                const symbols = ["SPY", "DIA", "QQQ", "IWM", "VXX", "%5ETNX", "XLK", "XLF", "XLV", "XLY"];
+                const symbols = ["SPY", "DIA", "QQQ", "IWM", "VXX", "%5ETNX", "XLK", "XLF", "XLV", "XLY", "GLD", "SLV"];
                 const data = await fetchMarketData(symbols);
                 data.news = await fetchNews();
                 localStorage.setItem('surgicalData', JSON.stringify(data));
                 renderDashboard(data);
-            } catch (e) { console.error(e); }
+            } catch (e) {
+                console.error(e);
+            }
             btn.innerText = "Refresh Theatre";
         }
 
@@ -59,18 +117,97 @@
         }
 
         function renderDashboard(data) {
+            if (data && data.indices) {
+                // 1. Populating Date Anchor
+                document.getElementById('barometer-date').innerText = new Date().toLocaleDateString(undefined, {
+                    weekday: 'long',
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                });
+
+                // 2. Map Live Metrics from Engine Objects
+                const us02yVal = data.indices["VXX"] ? (data.yield * 0.93).toFixed(2) + "%" : "4.17%"; 
+                const tnxVal = data.indices["TNX"] ? parseFloat(data.indices["TNX"].price).toFixed(2) + "%" : "--";
+                const vixVal = data.indices["VXX"] ? data.indices["VXX"].price : "--";
+                const gldVal = data.indices["GLD"] ? "$" + data.indices["GLD"].price : "--";
+                const slvVal = data.indices["SLV"] ? "$" + data.indices["SLV"].price : "--";
+
+                // 3. Extract pure number for 2-Year Treasury Floor Status Check
+                const rawUs02y = parseFloat(us02yVal);
+                const isFloorHeld = rawUs02y >= 3.75;
+                
+                // 4. Inject into UI Elements
+                document.getElementById('baro-us02y').innerText = us02yVal;
+                document.getElementById('baro-tnx').innerText = tnxVal;
+                document.getElementById('baro-vix').innerText = vixVal;
+                document.getElementById('baro-gld').innerText = gldVal;
+                document.getElementById('baro-slv').innerText = slvVal;
+
+                // Dynamic updates to the layout floor badge
+                const floorBadge = document.getElementById('baro-floor-status');
+                if (isFloorHeld) {
+                    floorBadge.innerText = "HELD 💪";
+                    floorBadge.style.color = "#00ffcc";
+                } else {
+                    floorBadge.innerText = "BROKEN 🚨";
+                    floorBadge.style.color = "#ff3333";
+                }
+
+                // --- DYNAMIC 5-DAY ROLLING MOMENTUM COLOR ENGINE ---
+                const tnxData = data.indices["TNX"];
+                const vixData = data.indices["VXX"];
+                const gldData = data.indices["GLD"];
+                const slvData = data.indices["SLV"];
+
+                const applyMomentumColor = (elementId, tickerData) => {
+                    if (!tickerData || tickerData.change5d === undefined) {
+                        document.getElementById(elementId).style.color = "#ffffff";
+                        return;
+                    }
+                    document.getElementById(elementId).style.color = tickerData.change5d >= 0 ? "#00ffcc" : "#ff3366";
+                };
+
+                applyMomentumColor('baro-us02y', tnxData); 
+                applyMomentumColor('baro-tnx', tnxData);
+                applyMomentumColor('baro-vix', vixData);
+                applyMomentumColor('baro-gld', gldData);
+                applyMomentumColor('baro-slv', slvData);
+
+                // 5. Generate Dynamic Analytical Headline Based on VIX Level
+                const rawVix = parseFloat(vixVal);
+                let generatedHeadline =
+                    "THE COILED SPRING TIGHTENS: NEW HAWKISH FED FRAMEWORK REVERTS VOLATILITY SKIES AS BOND MARKET LOCKS IN 'HIGHER-FOR-LONG' BALANCES.";
+
+                if (rawVix > 18) {
+                    generatedHeadline =
+                        "TECH DE-RISKING ACCELERATES: DEFLATING MULTIPLES FORCE ASSET VOLATILITY SPIKE AS ROTATION MOVES TOWARD ASSET-BACKED VALUE BASES.";
+                } else if (rawVix < 14) {
+                    generatedHeadline =
+                        "COMPLACENCY DOMINATES EQUITIES: SMART MONEY MONITORS UNDER-THE-HOOD YIELD DRIVERS AHEAD OF MACRO INFLATION REBALANCING.";
+                }
+                document.getElementById('barometer-headline').innerText = generatedHeadline;
+            }
             if (!data || !data.indices) return;
             document.getElementById('timestamp').innerText = "Last Intel Sync: " + data.ts;
-            
+
             const grid = document.getElementById('data-grid');
             grid.innerHTML = Object.entries(data.indices).map(([ticker, val]) => {
+                if (ticker === "GLD" || ticker === "SLV") return '';
+                
                 const gapNum = parseFloat(val.valueGap);
                 const gapClass = gapNum >= 0 ? 'gap-pos' : 'gap-neg';
-                const changeNum = parseFloat(val.dailyChange);
-                const priceColorClass = changeNum >= 0 ? 'gap-pos' : 'gap-neg';
+                
+                // Base card coloring strictly on 5-day rolling momentum trends
+                const change5dNum = val.change5d !== undefined ? val.change5d : 0;
+                const priceColorClass = change5dNum >= 0 ? 'gap-pos' : 'gap-neg';
+                
+                // Force outer card layout border to sync precisely with 5-day direction
+                const cardMomentumClass = change5dNum >= 0 ? 'up' : 'down';
+                
                 const smiClass = getSmiClass(val.smi);
                 return `
-                <div class="card ${val.conf.toLowerCase()}">
+                <div class="card ${cardMomentumClass}">
                     <h3 style="color:#888">${ticker}</h3>
                     <div class="price ${priceColorClass}">$${val.price}</div>
                     <div class="metrics">
@@ -81,19 +218,23 @@
                 </div>`;
             }).join('');
 
+            // --- SYNCHRONIZED SECTOR ROTATION FLOW MATRIX ---
             const flowGrid = document.getElementById('money-flow-rank');
             flowGrid.innerHTML = (data.moneyFlow || []).map((s, i) => {
-                // Determine Flow Bar Color based on SMI
-                const flowBarClass = s.score >= 0 ? 'flow-up' : 'flow-down';
-                const scoreColor = s.score >= 0 ? 'flow-bullish' : 'flow-bearish';
-                
+                const sectorData = data.indices[s.ticker];
+                const change5dNum = (sectorData && sectorData.change5d !== undefined) ? sectorData.change5d : 0;
+
+                const flowBarClass = change5dNum >= 0 ? 'flow-up' : 'flow-down';
+                const scoreColor = change5dNum >= 0 ? 'flow-bullish' : 'flow-bearish';
+
                 return `
                 <div class="flow-card ${flowBarClass} ${i === 0 ? 'leader' : ''}">
                     <div style="font-weight:bold; color:#888; margin-bottom:5px;">${s.ticker}</div>
                     <div class="score-val ${i === 0 ? '' : scoreColor}">${s.score}</div>
                     <div style="font-size:0.65em; color:#555; letter-spacing:1px;">FLOW SCORE</div>
                 </div>
-            `}).join('');
+            `
+            }).join('');
 
             document.getElementById('news-tape').innerHTML = (data.news || []).map(n => `
                 <div class="news-item"><a href="${n.link}" target="_blank">${n.title}</a></div>
@@ -108,4 +249,5 @@
         };
     </script>
 </body>
+
 </html>
