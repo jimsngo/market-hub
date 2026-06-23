@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Surgical Hub | Smart Money Pulse</title>
+    <title>Surgical Hub | Tactical Risk Console</title>
     <link rel="stylesheet" href="css/style.css">
 </head>
 
@@ -21,23 +21,45 @@
             </div>
         </header>
 
-        <div class="barometer-container"
-            style="background:#0c0c0c; border:1px solid #222; border-radius:8px; padding:20px; margin-bottom:25px;">
-            <div
-                style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #222; padding-bottom:10px; margin-bottom:15px;">
-                <span style="font-size:0.75em; letter-spacing:2px; color:#00ffcc; font-weight:bold;">🏛️ THE MACRO & STRUCTURAL ROTATION BAROMETER</span>
+        <!-- ==================== GATE 1: VOLATILITY THREAT LEVEL MATRIX ==================== -->
+        <div class="gate-container" style="background:#0c0c0c; border:1px solid #222; border-radius:8px; padding:20px; margin-bottom:15px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #222; padding-bottom:10px; margin-bottom:15px;">
+                <span style="font-size:0.75em; letter-spacing:2px; color:#ff3366; font-weight:bold;">🚨 GATE 1: VOLATILITY RISK FILTER (THE STORM CHECK)</span>
                 <span id="barometer-date" style="font-size:0.75em; color:#555;"></span>
             </div>
 
-            <div style="margin-bottom:20px;">
-                <div style="font-size:0.65em; color:#555; letter-spacing:1px; margin-bottom:5px;">MORNING BAROMETER HEADLINE</div>
-                <h2 id="barometer-headline"
-                    style="margin:0; font-weight:normal; color:#fff; font-size:1.15em; line-height:1.5; letter-spacing:0.5px;">
+            <!-- Dynamic System Tactical Threat Status Flag -->
+            <div id="gate1-alert" style="border:1px solid #333; padding:12px; border-radius:6px; font-weight:bold; font-size:0.9em; letter-spacing:1px; text-align:center; margin-bottom:15px; background:#111;">
+                CALCULATING THEATRE WEATHER CONDITIONS...
+            </div>
+
+            <!-- Macro Narrative Box -->
+            <div>
+                <div style="font-size:0.65em; color:#555; letter-spacing:1px; margin-bottom:5px;">REGIME ANALYSIS HEADLINE</div>
+                <h2 id="barometer-headline" style="margin:0; font-weight:normal; color:#fff; font-size:1.15em; line-height:1.5; letter-spacing:0.5px;">
                     Awaiting market engine calculation...
                 </h2>
             </div>
+            
+            <!-- VIX Centric Focus Sub-Panel -->
+            <div style="display:grid; grid-template-columns: 1fr; margin-top:15px;">
+                <div style="background:#111; padding:12px; border-radius:6px; border:1px solid #1a1a1a; display:flex; justify-content:space-between; align-items:center;">
+                    <div>
+                        <div style="font-size:0.6em; color:#888; letter-spacing:0.5px;">CBOE VOLATILITY INDEX (VIX)</div>
+                        <div style="font-size:0.6em; color:#444; margin-top:2px;">*Absolute Core Threshold Matrix</div>
+                    </div>
+                    <div id="baro-vix" style="font-size:1.6em; font-weight:bold; color:#fff;">--</div>
+                </div>
+            </div>
+        </div>
 
-            <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap:15px; margin-bottom:15px;">
+        <!-- ==================== GATE 2: FIXED INCOME & METALS BALANCES ==================== -->
+        <div class="gate-container" style="background:#0c0c0c; border:1px solid #222; border-radius:8px; padding:20px; margin-bottom:25px;">
+            <div style="border-bottom:1px solid #222; padding-bottom:10px; margin-bottom:15px;">
+                <span style="font-size:0.75em; letter-spacing:2px; color:#ffcc00; font-weight:bold;">🏛️ GATE 2: CAPITAL GRAVITY & HARD ASSETS (YIELD TREND FILTER)</span>
+            </div>
+
+            <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap:15px;">
                 <div style="background:#111; padding:10px; border-radius:6px; border:1px solid #1a1a1a;">
                     <div style="font-size:0.6em; color:#555;">2-YR TREASURY (US02Y)</div>
                     <div id="baro-us02y" style="font-size:1.2em; font-weight:bold; color:#fff; margin-top:5px;">--</div>
@@ -47,10 +69,6 @@
                     <div id="baro-tnx" style="font-size:1.2em; font-weight:bold; color:#fff; margin-top:5px;">--</div>
                 </div>
                 <div style="background:#111; padding:10px; border-radius:6px; border:1px solid #1a1a1a;">
-                    <div style="font-size:0.6em; color:#555;">VOLATILITY INDEX (VIX)</div>
-                    <div id="baro-vix" style="font-size:1.2em; font-weight:bold; color:#ff3366; margin-top:5px;">--</div>
-                </div>
-                <div style="background:#111; padding:10px; border-radius:6px; border:1px solid #1a1a1a;">
                     <div style="font-size:0.6em; color:#888;">GOLD TRUST (GLD)</div>
                     <div id="baro-gld" style="font-size:1.2em; font-weight:bold; color:#ffcc00; margin-top:5px;">--</div>
                 </div>
@@ -58,22 +76,17 @@
                     <div style="font-size:0.6em; color:#888;">SILVER TRUST (SLV)</div>
                     <div id="baro-slv" style="font-size:1.2em; font-weight:bold; color:#e5e5e5; margin-top:5px;">--</div>
                 </div>
-                <div
-                    style="background:#1a1111; padding:10px; border-radius:6px; border:1px solid #331a1a; text-align:center;">
+                <div style="background:#1a1111; padding:10px; border-radius:6px; border:1px solid #331a1a; text-align:center;">
                     <div style="font-size:0.6em; color:#885555; font-weight:bold;">3.75% US02Y FLOOR</div>
-                    <div id="baro-floor-status"
-                        style="font-size:1.1em; font-weight:bold; color:#ff3333; margin-top:5px;">CHECKING...</div>
+                    <div id="baro-floor-status" style="font-size:1.1em; font-weight:bold; color:#ff3333; margin-top:5px;">CHECKING...</div>
                 </div>
-            </div>
-
-            <div style="border-top:1px solid #1c1c1c; padding-top:10px; display:flex; justify-content:space-between; align-items:center;">
-                <span style="font-size:0.6em; color:#3a3a3a; letter-spacing:1px; font-weight:bold;">⚙️ HORIZON OVERRIDE ACTIVE</span>
-                <span style="font-size:0.6em; color:#444; letter-spacing:0.5px;">📊 NOTICE: ALL CONSOLE ASSET AND SECTOR COLOR HIGHLIGHTS DEVIATE FROM DAILY CLOSE AND ARE BOUND TO A 5-DAY ROLLING MOMENTUM CHANNEL.</span>
             </div>
         </div>
 
+        <!-- ==================== GATE 3: THE SECTOR & INDEX ALLOCATION MAP ==================== -->
         <div class="flow-container">
-            <div class="section-header">Sector Rotation: Smart Money Footprint</div>
+            <div class="section-header" style="letter-spacing:1px; color:#00ffcc;">📊 GATE 3: ALLOCATION FOOTPRINT & ALPHA GROUPS (5-DAY TREND MATRIX)</div>
+            <div class="section-header" style="font-size:0.65em; color:#444; margin-top:-5px; margin-bottom:15px; border:none;">Sector Rotation Tracker</div>
             <div id="money-flow-rank" class="flow-grid"></div>
         </div>
 
@@ -81,8 +94,13 @@
 
         <div style="margin-top:30px;">
             <div class="section-header">Live Intel Feed</div>
-            <div id="news-tape" style="background:#0a0a0a; padding:15px; border-radius:8px; border:1px solid #222;">
-            </div>
+            <div id="news-tape" style="background:#0a0a0a; padding:15px; border-radius:8px; border:1px solid #222;"></div>
+        </div>
+
+        <!-- Console Calibration Label Anchor -->
+        <div style="margin-top:20px; border-top:1px solid #1c1c1c; padding-top:10px; display:flex; justify-content:space-between; align-items:center;">
+            <span style="font-size:0.6em; color:#3a3a3a; letter-spacing:1px; font-weight:bold;">⚙️ HORIZON OVERRIDE ACTIVE</span>
+            <span style="font-size:0.6em; color:#444; letter-spacing:0.5px;">📊 NOTICE: ALL CONSOLE ASSET AND SECTOR COLOR HIGHLIGHTS DEVIATE FROM DAILY CLOSE AND ARE BOUND TO A 5-DAY ROLLING MOMENTUM CHANNEL.</span>
         </div>
     </div>
 
@@ -120,10 +138,7 @@
             if (data && data.indices) {
                 // 1. Populating Date Anchor
                 document.getElementById('barometer-date').innerText = new Date().toLocaleDateString(undefined, {
-                    weekday: 'long',
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric'
+                    weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
                 });
 
                 // 2. Map Live Metrics from Engine Objects
@@ -151,7 +166,7 @@
                     floorBadge.style.color = "#00ffcc";
                 } else {
                     floorBadge.innerText = "BROKEN 🚨";
-                    floorBadge.style.color = "#ff3333";
+                    floorBadge.style.color = "#ff3366";
                 }
 
                 // --- DYNAMIC 5-DAY ROLLING MOMENTUM COLOR ENGINE ---
@@ -168,14 +183,44 @@
                     document.getElementById(elementId).style.color = tickerData.change5d >= 0 ? "#00ffcc" : "#ff3366";
                 };
 
+                // Apply relative 5-day trends to fixed income and hard value metals
                 applyMomentumColor('baro-us02y', tnxData); 
                 applyMomentumColor('baro-tnx', tnxData);
-                applyMomentumColor('baro-vix', vixData);
                 applyMomentumColor('baro-gld', gldData);
                 applyMomentumColor('baro-slv', slvData);
 
-                // 5. Generate Dynamic Analytical Headline Based on VIX Level
+                // ==================== ENHANCED ABSOLUTE VIX & GATE 1 ALERTS ====================
                 const rawVix = parseFloat(vixVal);
+                const gate1AlertBox = document.getElementById('gate1-alert');
+                const vixDisplayElement = document.getElementById('baro-vix');
+
+                if (rawVix > 20) {
+                    // Absolute Danger: Red Storm Setup
+                    vixDisplayElement.style.color = "#ff3366"; 
+                    
+                    gate1AlertBox.innerText = "🛑 DO NOT ENTER, MARKET UNFAVORABLE";
+                    gate1AlertBox.style.color = "#ff3366";
+                    gate1AlertBox.style.borderColor = "#ff3366";
+                    gate1AlertBox.style.background = "#1a0d0f";
+                } else if (rawVix < 14) {
+                    // Absolute Calm: Green Signal Setup
+                    vixDisplayElement.style.color = "#00ffcc"; 
+                    
+                    gate1AlertBox.innerText = "🟢 CLEAR SYSTEM PARITY: CONDITIONS FAVORABLE FOR LONG DEPLOYMENT";
+                    gate1AlertBox.style.color = "#00ffcc";
+                    gate1AlertBox.style.borderColor = "#00ffcc";
+                    gate1AlertBox.style.background = "#091412";
+                } else {
+                    // Elevated Noise: Yellow Caution Setup
+                    vixDisplayElement.style.color = "#ffcc00"; 
+                    
+                    gate1AlertBox.innerText = "⚠️ CAUTION: MARKET CONDITIONS UNSETTLED (ELEVATED NOISE)";
+                    gate1AlertBox.style.color = "#ffcc00";
+                    gate1AlertBox.style.borderColor = "#ffcc00";
+                    gate1AlertBox.style.background = "#1a160d";
+                }
+
+                // 5. Generate Dynamic Analytical Headline Based on VIX Level
                 let generatedHeadline =
                     "THE COILED SPRING TIGHTENS: NEW HAWKISH FED FRAMEWORK REVERTS VOLATILITY SKIES AS BOND MARKET LOCKS IN 'HIGHER-FOR-LONG' BALANCES.";
 
@@ -198,11 +243,8 @@
                 const gapNum = parseFloat(val.valueGap);
                 const gapClass = gapNum >= 0 ? 'gap-pos' : 'gap-neg';
                 
-                // Base card coloring strictly on 5-day rolling momentum trends
                 const change5dNum = val.change5d !== undefined ? val.change5d : 0;
                 const priceColorClass = change5dNum >= 0 ? 'gap-pos' : 'gap-neg';
-                
-                // Force outer card layout border to sync precisely with 5-day direction
                 const cardMomentumClass = change5dNum >= 0 ? 'up' : 'down';
                 
                 const smiClass = getSmiClass(val.smi);
