@@ -131,7 +131,8 @@
             const btn = document.getElementById('sync-btn');
             btn.innerText = "SYNCING...";
             try {
-                const symbols = ["SPY", "DIA", "QQQ", "IWM", "VXX", "%5ETNX", "XLK", "XLF", "XLV", "XLY", "GLD", "SLV", "ES=F", "RTY=F"];
+                // Change "VXX" to "%5EVIX"
+const symbols = ["SPY", "DIA", "QQQ", "IWM", "%5EVIX", "%5ETNX", "XLK", "XLF", "XLV", "XLY", "GLD", "SLV", "ES=F", "RTY=F"];
                 const data = await fetchMarketData(symbols);
                 data.news = await fetchNews();
                 localStorage.setItem('surgicalData', JSON.stringify(data));
@@ -157,7 +158,7 @@
 
                 const us02yVal = data.indices["VXX"] ? (data.yield * 0.93).toFixed(2) + "%" : "4.17%"; 
                 const tnxVal = data.indices["TNX"] ? parseFloat(data.indices["TNX"].price).toFixed(2) + "%" : "--";
-                const vixVal = data.indices["VXX"] ? data.indices["VXX"].price : "--";
+                const vixVal = data.indices["VIX"] ? data.indices["VIX"].price : "--";
                 const gldVal = data.indices["GLD"] ? "$" + data.indices["GLD"].price : "--";
                 const slvVal = data.indices["SLV"] ? "$" + data.indices["SLV"].price : "--";
 
