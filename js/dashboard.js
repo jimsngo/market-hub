@@ -16,7 +16,7 @@ async function triggerSync() {
     if (btn) btn.innerText = "Refresh Theatre";
 }
 
-// Unified Tiered Momentum Color Assigner (FIXED: Stray semicolon removed)
+// Unified Tiered Momentum Color Assigner
 function getSmiStyleProperties(val) {
     const score = parseFloat(val);
     if (isNaN(score)) return { color: "#ffffff" };
@@ -243,6 +243,13 @@ function renderDashboard(data) {
 window.onload = () => {
     const saved = localStorage.getItem('surgicalData');
     if (saved) renderDashboard(JSON.parse(saved));
+    
+    // Initial fetch 500ms after window loads
     setTimeout(triggerSync, 500);
-    document.getElementById('sync-btn').onclick = triggerSync;
+    
+    // Core Upgrade: Safe 15-Minute Macro Background Automation Loop
+    setInterval(triggerSync, 15 * 60 * 1000);
+    
+    const syncBtn = document.getElementById('sync-btn');
+    if (syncBtn) syncBtn.onclick = triggerSync;
 };
