@@ -1,4 +1,4 @@
-const PROXY = "https://script.google.com/macros/s/AKfycbwG5Bz_OwwRLQIEDQwDHu9nLgd35fGyx-VdpveJNbVXqpnNzRYyMAmXdsgo3OcK-gYo/exec?url=";
+const PROXY = "https://script.google.com/macros/s/AKfycbzA28YtFZenD8vH4tTDU95C2Mowv4uOTeGuCU_ipkkk7YpMnt-zDuxQ-EHMkfXiqIMY/exec?url=";
 
 async function fetchMarketData(symbols) {
     let results = { indices: {}, yield: 0, ts: new Date().toLocaleTimeString(), moneyFlow: [] };
@@ -38,7 +38,7 @@ async function fetchMarketData(symbols) {
                 results.indices[ticker] = {
                     price: last.c.toFixed(2),
                     dailyChange: changePct,
-                    change5d: parseFloat(change5dPct), // Added for 5-day momentum tracking
+                    change5d: parseFloat(change5dPct),
                     smi: smiValue,
                     conf: (last.c > smaValue && smiValue > 0) ? "UP" : "DOWN",
                     valueGap: "N/A"

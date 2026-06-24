@@ -34,15 +34,30 @@
             </div>
 
             <!-- Macro Narrative Box -->
-            <div>
+            <div style="margin-bottom:15px;">
                 <div style="font-size:0.65em; color:#555; letter-spacing:1px; margin-bottom:5px;">REGIME ANALYSIS HEADLINE</div>
                 <h2 id="barometer-headline" style="margin:0; font-weight:normal; color:#fff; font-size:1.15em; line-height:1.5; letter-spacing:0.5px;">
                     Awaiting market engine calculation...
                 </h2>
             </div>
             
+            <!-- CONDITIONAL PRE-MARKET FUTURES DISPLAY PANEL -->
+            <div id="premarket-futures-panel" style="display:none; margin-bottom:15px; padding:12px; background:#111; border:1px solid #ffcc00; border-radius:6px;">
+                <div style="font-size:0.65em; color:#ffcc00; letter-spacing:1px; font-weight:bold; margin-bottom:10px;">⏰ LIVE PRE-MARKET FUTURES ACTIVE (4:00 AM - 9:30 AM ET)</div>
+                <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap:15px;">
+                    <div style="background:#050505; padding:8px; border-radius:4px; border:1px solid #222;">
+                        <div style="font-size:0.6em; color:#888;">S&P 500 FUTURES (ES=F)</div>
+                        <div id="baro-es-futures" style="font-size:1.1em; font-weight:bold; color:#fff; margin-top:3px;">--</div>
+                    </div>
+                    <div style="background:#050505; padding:8px; border-radius:4px; border:1px solid #222;">
+                        <div style="font-size:0.6em; color:#888;">RUSSELL 2000 FUTURES (RTY=F)</div>
+                        <div id="baro-rty-futures" style="font-size:1.1em; font-weight:bold; color:#fff; margin-top:3px;">--</div>
+                    </div>
+                </div>
+            </div>
+            
             <!-- VIX Centric Focus Sub-Panel -->
-            <div style="display:grid; grid-template-columns: 1fr; margin-top:15px;">
+            <div style="display:grid; grid-template-columns: 1fr;">
                 <div style="background:#111; padding:12px; border-radius:6px; border:1px solid #1a1a1a; display:flex; justify-content:space-between; align-items:center;">
                     <div>
                         <div style="font-size:0.6em; color:#888; letter-spacing:0.5px;">CBOE VOLATILITY INDEX (VIX)</div>
@@ -116,7 +131,7 @@
             const btn = document.getElementById('sync-btn');
             btn.innerText = "SYNCING...";
             try {
-                const symbols = ["SPY", "DIA", "QQQ", "IWM", "VXX", "%5ETNX", "XLK", "XLF", "XLV", "XLY", "GLD", "SLV"];
+                const symbols = ["SPY", "DIA", "QQQ", "IWM", "VXX", "%5ETNX", "XLK", "XLF", "XLV", "XLY", "GLD", "SLV", "ES=F", "RTY=F"];
                 const data = await fetchMarketData(symbols);
                 data.news = await fetchNews();
                 localStorage.setItem('surgicalData', JSON.stringify(data));
@@ -136,30 +151,25 @@
 
         function renderDashboard(data) {
             if (data && data.indices) {
-                // 1. Populating Date Anchor
                 document.getElementById('barometer-date').innerText = new Date().toLocaleDateString(undefined, {
                     weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
                 });
 
-                // 2. Map Live Metrics from Engine Objects
                 const us02yVal = data.indices["VXX"] ? (data.yield * 0.93).toFixed(2) + "%" : "4.17%"; 
                 const tnxVal = data.indices["TNX"] ? parseFloat(data.indices["TNX"].price).toFixed(2) + "%" : "--";
                 const vixVal = data.indices["VXX"] ? data.indices["VXX"].price : "--";
                 const gldVal = data.indices["GLD"] ? "$" + data.indices["GLD"].price : "--";
                 const slvVal = data.indices["SLV"] ? "$" + data.indices["SLV"].price : "--";
 
-                // 3. Extract pure number for 2-Year Treasury Floor Status Check
                 const rawUs02y = parseFloat(us02yVal);
                 const isFloorHeld = rawUs02y >= 3.75;
                 
-                // 4. Inject into UI Elements
                 document.getElementById('baro-us02y').innerText = us02yVal;
                 document.getElementById('baro-tnx').innerText = tnxVal;
                 document.getElementById('baro-vix').innerText = vixVal;
                 document.getElementById('baro-gld').innerText = gldVal;
                 document.getElementById('baro-slv').innerText = slvVal;
 
-                // Dynamic updates to the layout floor badge
                 const floorBadge = document.getElementById('baro-floor-status');
                 if (isFloorHeld) {
                     floorBadge.innerText = "HELD 💪";
@@ -169,11 +179,12 @@
                     floorBadge.style.color = "#ff3366";
                 }
 
-                // --- DYNAMIC 5-DAY ROLLING MOMENTUM COLOR ENGINE ---
                 const tnxData = data.indices["TNX"];
                 const vixData = data.indices["VXX"];
                 const gldData = data.indices["GLD"];
                 const slvData = data.indices["SLV"];
+                const esData = data.indices["ES=F"];
+                const rtyData = data.indices["RTY=F"];
 
                 const applyMomentumColor = (elementId, tickerData) => {
                     if (!tickerData || tickerData.change5d === undefined) {
@@ -183,11 +194,31 @@
                     document.getElementById(elementId).style.color = tickerData.change5d >= 0 ? "#00ffcc" : "#ff3366";
                 };
 
-                // Apply relative 5-day trends to fixed income and hard value metals
                 applyMomentumColor('baro-us02y', tnxData); 
                 applyMomentumColor('baro-tnx', tnxData);
                 applyMomentumColor('baro-gld', gldData);
                 applyMomentumColor('baro-slv', slvData);
+
+                // ==================== TIME ENGINE: PRE-MARKET CONTROL SWITCH ====================
+                const options = { timeZone: "America/New_York", hour: "numeric", minute: "numeric", hour12: false };
+                const etParts = new Intl.DateTimeFormat([], options).formatToParts(new Date());
+                const etHour = parseInt(etParts.find(p => p.type === "hour").value, 10);
+                const etMin = parseInt(etParts.find(p => p.type === "minute").value, 10);
+                const etTimeFloat = etHour + (etMin / 60);
+
+                const futuresPanel = document.getElementById('premarket-futures-panel');
+                
+                if (etTimeFloat >= 4.0 && etTimeFloat < 9.5) {
+                    futuresPanel.style.display = "block";
+                    
+                    document.getElementById('baro-es-futures').innerText = esData ? "$" + esData.price : "--";
+                    document.getElementById('baro-rty-futures').innerText = rtyData ? "$" + rtyData.price : "--";
+                    
+                    applyMomentumColor('baro-es-futures', esData);
+                    applyMomentumColor('baro-rty-futures', rtyData);
+                } else {
+                    futuresPanel.style.display = "none";
+                }
 
                 // ==================== ENHANCED ABSOLUTE VIX & GATE 1 ALERTS ====================
                 const rawVix = parseFloat(vixVal);
@@ -195,32 +226,25 @@
                 const vixDisplayElement = document.getElementById('baro-vix');
 
                 if (rawVix > 20) {
-                    // Absolute Danger: Red Storm Setup
                     vixDisplayElement.style.color = "#ff3366"; 
-                    
                     gate1AlertBox.innerText = "🛑 DO NOT ENTER, MARKET UNFAVORABLE";
                     gate1AlertBox.style.color = "#ff3366";
                     gate1AlertBox.style.borderColor = "#ff3366";
                     gate1AlertBox.style.background = "#1a0d0f";
                 } else if (rawVix < 14) {
-                    // Absolute Calm: Green Signal Setup
                     vixDisplayElement.style.color = "#00ffcc"; 
-                    
                     gate1AlertBox.innerText = "🟢 CLEAR SYSTEM PARITY: CONDITIONS FAVORABLE FOR LONG DEPLOYMENT";
                     gate1AlertBox.style.color = "#00ffcc";
                     gate1AlertBox.style.borderColor = "#00ffcc";
                     gate1AlertBox.style.background = "#091412";
                 } else {
-                    // Elevated Noise: Yellow Caution Setup
                     vixDisplayElement.style.color = "#ffcc00"; 
-                    
                     gate1AlertBox.innerText = "⚠️ CAUTION: MARKET CONDITIONS UNSETTLED (ELEVATED NOISE)";
                     gate1AlertBox.style.color = "#ffcc00";
                     gate1AlertBox.style.borderColor = "#ffcc00";
                     gate1AlertBox.style.background = "#1a160d";
                 }
 
-                // 5. Generate Dynamic Analytical Headline Based on VIX Level
                 let generatedHeadline =
                     "THE COILED SPRING TIGHTENS: NEW HAWKISH FED FRAMEWORK REVERTS VOLATILITY SKIES AS BOND MARKET LOCKS IN 'HIGHER-FOR-LONG' BALANCES.";
 
@@ -237,8 +261,9 @@
             document.getElementById('timestamp').innerText = "Last Intel Sync: " + data.ts;
 
             const grid = document.getElementById('data-grid');
+            // FIXED LINE HERE: Properly added the comma to unpack ticker AND val objects safely
             grid.innerHTML = Object.entries(data.indices).map(([ticker, val]) => {
-                if (ticker === "GLD" || ticker === "SLV") return '';
+                if (ticker === "GLD" || ticker === "SLV" || ticker === "ES=F" || ticker === "RTY=F") return '';
                 
                 const gapNum = parseFloat(val.valueGap);
                 const gapClass = gapNum >= 0 ? 'gap-pos' : 'gap-neg';
@@ -260,7 +285,6 @@
                 </div>`;
             }).join('');
 
-            // --- SYNCHRONIZED SECTOR ROTATION FLOW MATRIX ---
             const flowGrid = document.getElementById('money-flow-rank');
             flowGrid.innerHTML = (data.moneyFlow || []).map((s, i) => {
                 const sectorData = data.indices[s.ticker];
