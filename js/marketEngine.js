@@ -1,10 +1,16 @@
 const PROXY = "https://script.google.com/macros/s/AKfycbzA28YtFZenD8vH4tTDU95C2Mowv4uOTeGuCU_ipkkk7YpMnt-zDuxQ-EHMkfXiqIMY/exec?url=";
 
+// Utility to create a tiny delay between rapid-fire API hits
+const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
 async function fetchMarketData(symbols) {
     let results = { indices: {}, yield: 0, ts: new Date().toLocaleTimeString(), moneyFlow: [] };
 
     for (let sym of symbols) {
         try {
+            // Space out requests by 150ms to completely prevent Google CORS rate-limiting blocks
+            await sleep(150);
+
             const url = `https://query1.finance.yahoo.com/v8/finance/chart/${sym}?interval=1d&range=3mo`;
             const response = await fetch(PROXY + encodeURIComponent(url));
             const raw = await response.json();
@@ -28,10 +34,8 @@ async function fetchMarketData(symbols) {
                 const range = (hh - ll) / 2;
                 const smiValue = range !== 0 ? Math.round(((last.c - center) / range) * 100) : 0;
 
-                // Calculate Daily Change % for color-coding
                 const changePct = ((last.c - prev.c) / prev.c * 100).toFixed(2);
 
-                // Look back exactly 5 trading sessions ago (1 calendar week) to capture true rolling momentum
                 const prev5 = history.length >= 6 ? history[history.length - 6] : history[0];
                 const change5dPct = (((last.c - prev5.c) / prev5.c) * 100).toFixed(2);
 
