@@ -1,4 +1,10 @@
-const PROXY = "https://script.google.com/macros/s/AKfycbzA28YtFZenD8vH4tTDU95C2Mowv4uOTeGuCU_ipkkk7YpMnt-zDuxQ-EHMkfXiqIMY/exec?url=";
+// Global safety guard to prevent duplicate variable errors across decoupled scripts
+if (typeof PROXY === 'undefined') {
+    window.PROXY = "https://script.google.com/macros/s/AKfycbzA28YtFZenD8vH4tTDU95C2Mowv4uOTeGuCU_ipkkk7YpMnt-zDuxQ-EHMkfXiqIMY/exec?url=";
+}
+
+// Hardened backup proxy line to preserve uptime if Google Script handshakes drop
+const BACKUP_PROXY = "https://api.allorigins.win/get?url=";
 
 const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
@@ -9,9 +15,25 @@ async function fetchMarketData(symbols) {
         try {
             await sleep(150); // Proxy firewall safety pacing
 
-            const url = `https://query1.finance.yahoo.com/v8/finance/chart/${sym}?interval=1wk&range=1y`;
-            const response = await fetch(PROXY + encodeURIComponent(url));
-            const raw = await response.json();
+            const targetUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${sym}?interval=1wk&range=1y`;
+            let response, raw;
+
+            try {
+                // Try Primary Attempt: Google Apps Script Proxy
+                response = await fetch(PROXY + encodeURIComponent(targetUrl), {
+                    method: 'GET',
+                    redirect: 'follow' // Force native browser tracking on 302 redirects
+                });
+                raw = await response.json();
+            } catch (primaryError) {
+                console.warn(`Primary proxy failed for ${sym}. Triggering backup router...`);
+                
+                // Fallback Attempt: Public open CORS router line
+                response = await fetch(BACKUP_PROXY + encodeURIComponent(targetUrl));
+                const wrappedData = await response.json();
+                // AllOrigins wraps the payload response inside a text string stringify block
+                raw = JSON.parse(wrappedData.contents);
+            }
             
             if (raw?.chart?.result?.[0]) {
                 const res = raw.chart.result[0];
@@ -64,9 +86,12 @@ async function fetchMarketData(symbols) {
 
                 if (ticker === "TNX") results.yield = currentPrice;
             }
-        } catch (e) { console.error(e); }
+        } catch (e) { 
+            console.error(`Complete pipeline drop for symbol ${sym}:`, e); 
+        }
     }
 
+    // Apply baseline valuation gaps
     Object.keys(results.indices).forEach(key => {
         const cfg = indexConfigs[key];
         if (cfg && cfg.pe > 0 && key !== 'TNX') {
@@ -75,6 +100,18 @@ async function fetchMarketData(symbols) {
             results.indices[key].valueGap = gap + "%";
         }
     });
+
+    // Handle precious metals value gaps manually against 2-Yr yield parity
+    if (results.indices["GLD"] && results.yield > 0) {
+        // Gold historical baseline equity placeholder index conversion comparison
+        const gldEarningsYield = (100 / 22.5); 
+        results.indices["GLD"].valueGap = (gldEarningsYield - results.yield * 0.93).toFixed(2) + "%";
+    }
+    if (results.indices["SLV"] && results.yield > 0) {
+        // Silver historical baseline equity placeholder index conversion comparison
+        const slvEarningsYield = (100 / 25.0); 
+        results.indices["SLV"].valueGap = (slvEarningsYield - results.yield * 0.93).toFixed(2) + "%";
+    }
 
     const sectors = ["XLK", "XLF", "XLV", "XLY"];
     results.moneyFlow = sectors

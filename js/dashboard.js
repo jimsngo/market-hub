@@ -83,9 +83,18 @@ function renderDashboard(data) {
         futuresPanel.style.display = "none";
     }
 
-    // 3. GATE 2 LIQUIDITY ASSETS: DUAL-TRACKS MATCHED PERFECTLY AT 12PX HEIGHT
+    // 3. GATE 2 ROW GRID GENERATOR (UPGRADED: Value Gap injected to Metals loop)
     const us02yPrice = vixData ? (data.yield * 0.93).toFixed(2) + "%" : "4.17%";
     const isFloorHeld = parseFloat(us02yPrice) >= 3.75;
+
+    let gate2Html = `
+    <div style="background:#1a1111; padding:10px; border-radius:6px; border:1px solid #331a1a; text-align:center; display:flex; flex-direction:column; justify-content:center; min-height:120px;">
+        <div style="font-size:0.65em; color:#885555; font-weight:bold; letter-spacing:1px; margin-bottom:4px;">3.75% US02Y FLOOR</div>
+        <div id="baro-floor-status" style="font-size:1.3em; font-weight:bold; color:${isFloorHeld ? '#00ffcc' : '#ff3366'}; margin-top:5px; letter-spacing:1px;">
+            ${isFloorHeld ? 'HELD 💪' : 'BROKEN 🚨'}
+        </div>
+        <div style="font-size:0.55em; color:#555; margin-top:8px; line-height:1.3;">EQUITY HURDLE STATUS</div>
+    </div>`;
 
     const gate2Config = [
         { label: "2-YR TREASURY (US02Y)", price: us02yPrice, data: tnxData, suffix: "%", scale: 0.93, isMetal: false },
@@ -96,7 +105,7 @@ function renderDashboard(data) {
 
     const gate2Grid = document.getElementById('gate2-grid');
     if (gate2Grid) {
-        let gate2Html = gate2Config.map(asset => {
+        gate2Html += gate2Config.map(asset => {
             const val = asset.data;
             if (!val) return '';
             
@@ -104,6 +113,9 @@ function renderDashboard(data) {
             const lowVal = asset.isMetal ? `${asset.prefix}${val.weekLow}` : `${(parseFloat(val.weekLow) * asset.scale).toFixed(2)}${asset.suffix}`;
             const highVal = asset.isMetal ? `${asset.prefix}${val.weekHigh}` : `${(parseFloat(val.weekHigh) * asset.scale).toFixed(2)}${asset.suffix}`;
             const textStyles = getSmiStyleProperties(val.smi);
+
+            // Dynamically evaluate Value Gap class style strings for Metals
+            const gapClass = parseFloat(val.valueGap) >= 0 || val.valueGap === "N/A" ? 'gap-pos' : 'gap-neg';
 
             return `
             <div style="background:#111; padding:10px; border-radius:6px; border:1px solid #1a1a1a; display:flex; flex-direction:column; justify-content:space-between;">
@@ -120,24 +132,22 @@ function renderDashboard(data) {
                         <span style="color:#666;">L: ${lowVal}</span>
                         <span style="color:#666;">H: ${highVal}</span>
                     </div>
-                    <div style="font-size:0.55em; border-top:1px solid #1c1c1c; padding-top:4px; color:#555;">
-                        SMI(10) MOMENTUM: <span style="color:${textStyles.color}; font-weight:bold; float:right;">${val.smi}</span>
-                        <div class="tos-mini-track" style="height: 12px; margin: 4px 0 0 0; background: #03070d; border-color: #0e1620;">
+                    <div style="font-size:0.55em; border-top:1px solid #1c1c1c; padding-top:4px; color:#555; display:flex; flex-direction:column; gap:4px;">
+                        <div>
+                            SMI(10) MOMENTUM: <span style="color:${textStyles.color}; font-weight:bold; float:right;">${val.smi}</span>
+                        </div>
+                        <div class="tos-mini-track" style="height: 12px; margin: 0; background: #03070d; border-color: #0e1620;">
                             <div class="tos-center-axis" style="left: 50%; background: #192535;"></div>
                             <div class="tos-fill-bar" style="${getSmiBarStyle(val.smi)}"></div>
+                        </div>
+                        <div style="margin-top:2px;">
+                            Value Gap: <span class="${gapClass}" style="float:right; font-weight:bold;">${val.valueGap}</span>
                         </div>
                     </div>
                 </div>
             </div>`;
         }).join('');
 
-        gate2Html += `
-        <div style="background:#1a1111; padding:10px; border-radius:6px; border:1px solid #331a1a; text-align:center; display:flex; flex-direction:column; justify-content:center;">
-            <div style="font-size:0.6em; color:#885555; font-weight:bold;">3.75% US02Y FLOOR</div>
-            <div id="baro-floor-status" style="font-size:1.1em; font-weight:bold; color:${isFloorHeld ? '#00ffcc' : '#ff3366'}; margin-top:5px;">
-                ${isFloorHeld ? 'HELD 💪' : 'BROKEN 🚨'}
-            </div>
-        </div>`;
         gate2Grid.innerHTML = gate2Html;
     }
 
@@ -243,13 +253,8 @@ function renderDashboard(data) {
 window.onload = () => {
     const saved = localStorage.getItem('surgicalData');
     if (saved) renderDashboard(JSON.parse(saved));
-    
-    // Initial fetch 500ms after window loads
     setTimeout(triggerSync, 500);
-    
-    // Core Upgrade: Safe 15-Minute Macro Background Automation Loop
     setInterval(triggerSync, 15 * 60 * 1000);
-    
     const syncBtn = document.getElementById('sync-btn');
     if (syncBtn) syncBtn.onclick = triggerSync;
 };
