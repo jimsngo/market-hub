@@ -8,6 +8,62 @@ const BACKUP_PROXY = "https://api.allorigins.win/get?url=";
 
 const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
+// --- SURGICAL INDICATOR HELPERS ---
+
+// Generates a sequentially smoothed EMA array to allow precise double smoothing
+function calculateEMAArray(data, period) {
+    if (!data.length) return [];
+    const k = 2 / (period + 1);
+    let ema = data[0];
+    const results = [ema];
+    for (let i = 1; i < data.length; i++) {
+        ema = (data[i] - ema) * k + ema;
+        results.push(ema);
+    }
+    return results;
+}
+
+// Custom Technical SMI: 10-day Momentum Engine with 5-day Normalization Window
+function calculateSurgicalSMI(history) {
+    const rangeLength = 5; // 5-day high/low filter
+    const smooth = 3;      // Double smoothing length
+    
+    if (history.length < 15) return 0;
+    
+    let diffs = [];
+    let ranges = [];
+    
+    // Compute raw metrics across the historical window
+    for (let i = rangeLength - 1; i < history.length; i++) {
+        const slice = history.slice(i - rangeLength + 1, i + 1);
+        const h = Math.max(...slice.map(d => d.h));
+        const l = Math.min(...slice.map(d => d.l));
+        const c = history[i].c;
+        
+        const range = h - l;
+        const midpoint = (h + l) / 2;
+        
+        diffs.push(c - midpoint);
+        ranges.push(range);
+    }
+    
+    // Sequential Double Smoothing (EMA of EMA)
+    const emaDiff1 = calculateEMAArray(diffs, smooth);
+    const emaDiff2 = calculateEMAArray(emaDiff1, smooth);
+    
+    const emaRange1 = calculateEMAArray(ranges, smooth);
+    const emaRange2 = calculateEMAArray(emaRange1, smooth);
+    
+    if (emaRange2.length === 0) return 0;
+    
+    const finalDiff = emaDiff2[emaDiff2.length - 1];
+    const finalRange = emaRange2[emaRange2.length - 1];
+    
+    return (finalRange !== 0) ? Math.round((finalDiff / (finalRange / 2)) * 100) : 0;
+}
+
+// --- MAIN DATA ENGINE ---
+
 async function fetchMarketData(symbols) {
     let results = { indices: {}, yield: 0, ts: new Date().toLocaleTimeString(), moneyFlow: [] };
 
@@ -15,14 +71,15 @@ async function fetchMarketData(symbols) {
         try {
             await sleep(150); // Proxy firewall safety pacing
 
-            const targetUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${sym}?interval=1wk&range=1y`;
+            // Interval calibrated to daily 1d frequency lookbacks
+            const targetUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${sym}?interval=1d&range=3mo`;
             let response, raw;
 
             try {
                 // Try Primary Attempt: Google Apps Script Proxy
                 response = await fetch(PROXY + encodeURIComponent(targetUrl), {
                     method: 'GET',
-                    redirect: 'follow' // Force native browser tracking on 302 redirects
+                    redirect: 'follow'
                 });
                 raw = await response.json();
             } catch (primaryError) {
@@ -31,7 +88,6 @@ async function fetchMarketData(symbols) {
                 // Fallback Attempt: Public open CORS router line
                 response = await fetch(BACKUP_PROXY + encodeURIComponent(targetUrl));
                 const wrappedData = await response.json();
-                // AllOrigins wraps the payload response inside a text string stringify block
                 raw = JSON.parse(wrappedData.contents);
             }
             
@@ -44,16 +100,19 @@ async function fetchMarketData(symbols) {
                     c: ind.close[i], h: ind.high[i], l: ind.low[i]
                 })).filter(d => d.c !== null && d.h !== null && d.l !== null);
 
-                // Isolate current active running week bar
+                // Isolate current active daily bars
                 const last = history[history.length - 1]; 
                 const prev = history[history.length - 2]; 
                 const smaValue = history.reduce((acc, val) => acc + val.c, 0) / history.length;
                 
                 const currentPrice = last.c;
-                const weekHigh = last.h;
-                const weekLow = last.l;
                 
-                // Calculate position relative to weekly HL2 midpoint
+                // Track current rolling 5-day window boundaries instead of fixed weekly frames
+                const last5Days = history.slice(-5);
+                const weekHigh = Math.max(...last5Days.map(d => d.h));
+                const weekLow = Math.min(...last5Days.map(d => d.l));
+                
+                // Calculate tracking location relative to running High/Low parameters
                 let currentPct = 50;
                 const weekRange = weekHigh - weekLow;
                 if (weekRange > 0) {
@@ -63,14 +122,8 @@ async function fetchMarketData(symbols) {
 
                 const changePct = ((last.c - prev.c) / prev.c * 100).toFixed(2);
 
-                // Pure Weekly SMI(10) lookback slicing
-                const len10Weeks = history.slice(-10);
-                const macroHigh = Math.max(...len10Weeks.map(d => d.h));
-                const macroLow = Math.min(...len10Weeks.map(d => d.l));
-                const center = (macroHigh + macroLow) / 2;
-                const range = (macroHigh - macroLow) / 2;
-                
-                const smiValue = range !== 0 ? Math.round(((last.c - center) / range) * 100) : 0;
+                // Process the 10-day custom momentum / 5-day normalization window SMI calculations
+                const smiValue = calculateSurgicalSMI(history);
 
                 results.indices[ticker] = {
                     price: currentPrice.toFixed(2),
@@ -103,12 +156,10 @@ async function fetchMarketData(symbols) {
 
     // Handle precious metals value gaps manually against 2-Yr yield parity
     if (results.indices["GLD"] && results.yield > 0) {
-        // Gold historical baseline equity placeholder index conversion comparison
         const gldEarningsYield = (100 / 22.5); 
         results.indices["GLD"].valueGap = (gldEarningsYield - results.yield * 0.93).toFixed(2) + "%";
     }
     if (results.indices["SLV"] && results.yield > 0) {
-        // Silver historical baseline equity placeholder index conversion comparison
         const slvEarningsYield = (100 / 25.0); 
         results.indices["SLV"].valueGap = (slvEarningsYield - results.yield * 0.93).toFixed(2) + "%";
     }

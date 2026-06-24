@@ -32,7 +32,7 @@ function getTosBarStyle(percentage) {
         : `left: ${pct}%; width: ${50 - pct}%; background: #b9001b; border-radius: 2px 0 0 2px;`;
 }
 
-// Progressive Intensity Gradient Return Builder for SMI(10) tracks (-100 to +100)
+// Progressive Intensity Gradient Return Builder for SMI tracks (-100 to +100)
 function getSmiBarStyle(scoreValue) {
     const score = parseFloat(scoreValue);
     if (isNaN(score)) return '';
@@ -46,6 +46,7 @@ function getSmiBarStyle(scoreValue) {
 function renderDashboard(data) {
     if (!data || !data.indices) return;
 
+    const tsEl = document.getElementById('timestamp'); 
     const bDate = document.getElementById('barometer-date');
     if (bDate) bDate.innerText = new Date().toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
 
@@ -56,16 +57,57 @@ function renderDashboard(data) {
     const esData = data.indices["ES=F"];
     const rtyData = data.indices["RTY=F"];
 
-    // 1. UPDATE GATE 1 VOLATILITY TRACK
-    const vixVal = vixData ? vixData.price : "--";
-    const rawVix = parseFloat(vixVal); 
-    const elVix = document.getElementById('baro-vix'); if (elVix) elVix.innerText = vixVal;
+    const vixVal = vixData ? parseFloat(vixData.price) : 0;
+    const vixSmi = vixData ? parseFloat(vixData.smi) : 0;
+    const vixAvg = vixData ? parseFloat(vixData.smiAvg) : 0;
+    const vixPct = vixData ? parseFloat(vixData.currentPct) : 50;
+    
+    const tnxVal = tnxData ? parseFloat(tnxData.price) : 0;
+    const tnxSmi = tnxData ? parseFloat(tnxData.smi) : 0;
+
+    // --- HARDENED REAL-TIME PIVOT ENGINE (NO IFS, ANDS, OR ORS) ---
+    // Rule 1: If VIX > 20, market is bearish, period.
+    // Rule 2: If VIX < 20, look at the 5-day H/L graph. If it's green (> 50%), it is bearish.
+    const isSystemSafeToOperate = (vixVal < 20 && vixPct <= 50);
+    const isFirewallTripped = !isSystemSafeToOperate;
+
+    // 1. DYNAMIC UPDATE FOR GATE 1 VOLATILITY MATRIX
+    const elVix = document.getElementById('baro-vix'); if (elVix && vixData) elVix.innerText = vixVal.toFixed(2);
     const vixFill = document.getElementById('vix-tos-fill');
     if (vixFill && vixData) vixFill.style.cssText = getTosBarStyle(vixData.currentPct);
     const vixL = document.getElementById('vix-lbl-low'); if (vixL && vixData) vixL.innerText = `L: ${vixData.weekLow}`;
     const vixH = document.getElementById('vix-lbl-high'); if (vixH && vixData) vixH.innerText = `H: ${vixData.weekHigh}`;
+    const vixSmiLabel = document.getElementById('vix-lbl-smi'); 
+    if (vixSmiLabel && vixData) {
+        vixSmiLabel.innerText = `SMI: ${vixSmi} / Avg: ${vixAvg}`;
+        vixSmiLabel.style.color = getSmiStyleProperties(vixSmi).color;
+    }
 
-    // 2. TIMING PANELS (PRE-MARKET FUTURES ACTIVE MATRIX)
+    // 2. DYNAMIC UPDATE FOR GATE 1 RATE MOMENTUM MATRIX
+    const elTnx = document.getElementById('baro-tnx'); if (elTnx && tnxData) elTnx.innerText = tnxVal.toFixed(2) + "%";
+    const tnxFill = document.getElementById('tnx-tos-fill');
+    if (tnxFill && tnxData) tnxFill.style.cssText = getTosBarStyle(tnxData.currentPct);
+    const tnxL = document.getElementById('tnx-lbl-low'); if (tnxL && tnxData) tnxL.innerText = `L: ${tnxData.weekLow}%`;
+    const tnxH = document.getElementById('tnx-lbl-high'); if (tnxH && tnxData) tnxH.innerText = `H: ${tnxData.weekHigh}%`;
+    const tnxSmiLabel = document.getElementById('tnx-lbl-smi');
+    if (tnxSmiLabel && tnxData) {
+        tnxSmiLabel.innerText = `SMI: ${tnxSmi}`;
+        tnxSmiLabel.style.color = getSmiStyleProperties(tnxSmi).color;
+    }
+
+    // --- 2b. BINARY OPERATIONAL DIRECTIVE BOX OUTPUT ---
+    const summaryEl = document.getElementById('gate1-summary-directive');
+    if (summaryEl) {
+        if (isSystemSafeToOperate) {
+            summaryEl.innerText = "📋 DIRECTIVE: Market Favorable - It's OK to buy High Value Stocks";
+            summaryEl.style.cssText = "border:1px solid #007f4e; padding:14px; border-radius:6px; font-weight:bold; font-size:0.95em; text-align:center; letter-spacing:0.5px; background:#0a1910; color:#00ff66; box-shadow:0 0 10px rgba(0,255,102,0.15);";
+        } else {
+            summaryEl.innerText = "📋 DIRECTIVE: Market Unfavorable - Time to Cash Out or Trim Positions";
+            summaryEl.style.cssText = "border:1px solid #b9001b; padding:14px; border-radius:6px; font-weight:bold; font-size:0.95em; text-align:center; letter-spacing:0.5px; background:#1a0d0f; color:#ff3366; box-shadow:0 0 12px rgba(255,51,102,0.2);";
+        }
+    }
+
+    // 3. TIMING PANELS (PRE-MARKET FUTURES ACTIVE MATRIX)
     const options = { timeZone: "America/New_York", hour: "numeric", minute: "numeric", hour12: false };
     const etParts = new Intl.DateTimeFormat([], options).formatToParts(new Date());
     const etTimeFloat = parseInt(etParts.find(p => p.type === "hour").value, 10) + (parseInt(etParts.find(p => p.type === "minute").value, 10) / 60);
@@ -83,7 +125,7 @@ function renderDashboard(data) {
         futuresPanel.style.display = "none";
     }
 
-    // 3. GATE 2 ROW GRID GENERATOR (UPGRADED: Value Gap injected to Metals loop)
+    // 4. GATE 2 ROW GRID GENERATOR (Value Gaps + 2-Yr Yield floor)
     const us02yPrice = vixData ? (data.yield * 0.93).toFixed(2) + "%" : "4.17%";
     const isFloorHeld = parseFloat(us02yPrice) >= 3.75;
 
@@ -98,7 +140,6 @@ function renderDashboard(data) {
 
     const gate2Config = [
         { label: "2-YR TREASURY (US02Y)", price: us02yPrice, data: tnxData, suffix: "%", scale: 0.93, isMetal: false },
-        { label: "10-YR TREASURY (TNX)", price: tnxData ? tnxData.price + "%" : "--", data: tnxData, suffix: "%", scale: 1, isMetal: false },
         { label: "GOLD TRUST (GLD)", price: gldData ? "$" + gldData.price : "--", data: gldData, suffix: "", scale: 1, prefix: "$", isMetal: true },
         { label: "SILVER TRUST (SLV)", price: slvData ? "$" + slvData.price : "--", data: slvData, suffix: "", scale: 1, prefix: "$", isMetal: true }
     ];
@@ -113,8 +154,6 @@ function renderDashboard(data) {
             const lowVal = asset.isMetal ? `${asset.prefix}${val.weekLow}` : `${(parseFloat(val.weekLow) * asset.scale).toFixed(2)}${asset.suffix}`;
             const highVal = asset.isMetal ? `${asset.prefix}${val.weekHigh}` : `${(parseFloat(val.weekHigh) * asset.scale).toFixed(2)}${asset.suffix}`;
             const textStyles = getSmiStyleProperties(val.smi);
-
-            // Dynamically evaluate Value Gap class style strings for Metals
             const gapClass = parseFloat(val.valueGap) >= 0 || val.valueGap === "N/A" ? 'gap-pos' : 'gap-neg';
 
             return `
@@ -134,7 +173,7 @@ function renderDashboard(data) {
                     </div>
                     <div style="font-size:0.55em; border-top:1px solid #1c1c1c; padding-top:4px; color:#555; display:flex; flex-direction:column; gap:4px;">
                         <div>
-                            SMI(10) MOMENTUM: <span style="color:${textStyles.color}; font-weight:bold; float:right;">${val.smi}</span>
+                            SMI MOMENTUM: <span style="color:${textStyles.color}; font-weight:bold; float:right;">${val.smi}</span>
                         </div>
                         <div class="tos-mini-track" style="height: 12px; margin: 0; background: #03070d; border-color: #0e1620;">
                             <div class="tos-center-axis" style="left: 50%; background: #192535;"></div>
@@ -151,42 +190,43 @@ function renderDashboard(data) {
         gate2Grid.innerHTML = gate2Html;
     }
 
-    // 4. MULTI-INDEX SYSTEMIC HEADLINE ANALYSIS SWITCH
+    // 5. FIREWALL LEVEL OVERRIDE AND MULTI-INDEX HEADLINE ANALYSIS
     const coreIndices = ['SPY', 'DIA', 'QQQ', 'IWM'];
     const bearZoneCount = coreIndices.filter(ticker => data.indices[ticker] && parseFloat(data.indices[ticker].currentPct) < 50).length;
     const gate1AlertBox = document.getElementById('gate1-alert');
     const headlineElement = document.getElementById('barometer-headline');
 
     if (gate1AlertBox && headlineElement) {
-        if (bearZoneCount >= 2) {
+        if (isFirewallTripped) {
+            gate1AlertBox.innerText = `🛑 CRITICAL FIREWALL BREACH: CLOSE POSITIONS / DEFENSIVE CASH LOCK`;
+            gate1AlertBox.style.cssText = "color:#ff3366; border-color:#ff3366; background:#1a0d0f; padding:12px; border-radius:6px; font-weight:bold; font-size:0.9em; letter-spacing:1px; text-align:center; margin-bottom:15px; box-shadow: 0 0 10px rgba(255,51,102,0.2);";
+            headlineElement.innerText = "MACRO THREAT ACTIVE: PIVOT SHUTDOWN CALIBRATED. EXTRAORDINARY REGIME ANXIETY DETECTED VIA GRAPH EXTENSION OR LEVEL BREAK.";
+        } else if (bearZoneCount >= 2) {
             gate1AlertBox.innerText = `🛑 TACTICAL RISK EXPOSURE ALERT: ${bearZoneCount} CORE INDICES IN BEAR CHANNELS`;
             gate1AlertBox.style.cssText = "color:#ff3366; border-color:#ff3366; background:#1a0d0f; padding:12px; border-radius:6px; font-weight:bold; font-size:0.9em; letter-spacing:1px; text-align:center; margin-bottom:15px;";
             headlineElement.innerText = "DISTRIBUTION REGIME CONFIRMED: SEVERE LACK OF BID DEPTH DRIVES RISK CHANNELS UNDER THE HORIZON. PROTECT TRADING CAPITAL.";
         } else {
-            if (elVix && !isNaN(rawVix)) elVix.style.color = rawVix > 20 ? "#ff3366" : (rawVix < 14 ? "#00ffcc" : "#ffcc00");
-            if (rawVix > 20) {
-                gate1AlertBox.innerText = "🛑 DO NOT ENTER, VOLATILITY FLOOD ACTIVE";
-                gate1AlertBox.style.cssText = "color:#ff3366; border-color:#ff3366; background:#1a0d0f; padding:12px; border-radius:6px; font-weight:bold; font-size:0.9em; letter-spacing:1px; text-align:center; margin-bottom:15px;";
-                headlineElement.innerText = "VOLATILITY SHOCK IN PROGRESS: SPECULATIVE VEHICLES COLLAPSE AS SYSTEM LIQUIDITY COILS AHEAD OF INTERNAL MACRO REBALANCING.";
-            } else if (rawVix < 14) {
+            if (elVix) elVix.style.color = vixVal > 20 ? "#ff3366" : (vixVal < 14 ? "#00ffcc" : "#ffcc00");
+            
+            if (vixVal < 14) {
                 gate1AlertBox.innerText = "🟢 CLEAR SYSTEM PARITY: CONDITIONS FAVORABLE FOR LONG DEPLOYMENT";
                 gate1AlertBox.style.cssText = "color:#00ffcc; border-color:#00ffcc; background:#091412; padding:12px; border-radius:6px; font-weight:bold; font-size:0.9em; letter-spacing:1px; text-align:center; margin-bottom:15px;";
                 headlineElement.innerText = "COMPLACENCY DOMINATES CAPITAL STRATAS: BULLS DIRECT ENVIRONMENT VELOCITY. ACCUMULATION MODE ACTIVE.";
             } else {
                 gate1AlertBox.innerText = "⚠️ CAUTION: MARKET CONDITIONS UNSETTLED (ELEVATED NOISE)";
                 gate1AlertBox.style.cssText = "color:#ffcc00; border-color:#ffcc00; background:#1a160d; padding:12px; border-radius:6px; font-weight:bold; font-size:0.9em; letter-spacing:1px; text-align:center; margin-bottom:15px;";
-                headlineElement.innerText = "CHOPPY CONSOLIDATION DETECTED: ASSETS HOLD ABOVE WEEKLY EQUILIBRIUM MEDIANS. ROTATION IS ACTIVELY PACING.";
+                headlineElement.innerText = "CHOPPY CONSOLIDATION DETECTED: ASSETS HOLD ABOVE DAILY EQUILIBRIUM MEDIANS. ROTATION IS ACTIVELY PACING.";
             }
         }
     }
     
-    const tsEl = document.getElementById('timestamp'); if (tsEl) tsEl.innerText = "Last Intel Sync: " + data.ts;
+    if (tsEl) tsEl.innerText = "Last Intel Sync: " + data.ts;
 
-    // 5. MASTER GRID RENDERING LOOP (GATE 3 GRIDS)
+    // 6. MASTER GRID RENDERING LOOP (GATE 3 ASSET GRIDS)
     const grid = document.getElementById('data-grid');
     if (grid) {
         grid.innerHTML = Object.entries(data.indices).map(([ticker, val]) => {
-            if (["GLD", "SLV", "ES=F", "RTY=F", "VIX"].includes(ticker)) return '';
+            if (["GLD", "SLV", "ES=F", "RTY=F", "VIX", "TNX"].includes(ticker)) return '';
             
             const gapClass = parseFloat(val.valueGap) >= 0 ? 'gap-pos' : 'gap-neg';
             const priceColorClass = val.change5d >= 0 ? 'gap-pos' : 'gap-neg';
@@ -205,13 +245,13 @@ function renderDashboard(data) {
                         <div class="tos-fill-bar" style="${getTosBarStyle(val.currentPct)}"></div>
                     </div>
                     <div class="tos-labels" style="margin-bottom: 6px;">
-                        <span style="color:#666;">L: ${val.weekLow}</span>
-                        <span style="color:#666;">H: ${val.weekHigh}</span>
+                        <span style="color:#666;">5D L: ${val.weekLow}</span>
+                        <span style="color:#666;">5D H: ${val.weekHigh}</span>
                     </div>
                 </div>
                 <div class="metrics" style="font-size:0.65em; margin-top:8px; border-top:1px solid #151515; padding-top:8px;">
                     <div style="color:#555; margin-bottom:4px; display:flex; justify-content:space-between;">
-                        <span>SMI(10) MOMENTUM:</span>
+                        <span>SMI MOMENTUM:</span>
                         <span style="color:${textStyles.color}; font-weight:bold;">${val.smi}</span>
                     </div>
                     <div class="tos-mini-track" style="height: 12px; margin: 4px 0 6px 0; background: #03070d; border-color: #0e1620;">
@@ -226,7 +266,7 @@ function renderDashboard(data) {
         }).join('');
     }
 
-    // 6. SECTOR ALLOCATION SCOREBOARD RENDERING LOOP
+    // 7. SECTOR ALLOCATION SCOREBOARD RENDERING LOOP
     const flowGrid = document.getElementById('money-flow-rank');
     if (flowGrid) {
         flowGrid.innerHTML = (data.moneyFlow || []).map((s, i) => {
@@ -244,7 +284,7 @@ function renderDashboard(data) {
                     <div class="tos-center-axis" style="left: 50%; background: #192535;"></div>
                     <div class="tos-fill-bar" style="${getSmiBarStyle(s.score)}"></div>
                 </div>
-                <div style="font-size:0.6em; color:#444; letter-spacing:1px; text-align:center; font-weight:bold;">SMI(10) RANGE VELOCITY</div>
+                <div style="font-size:0.6em; color:#444; letter-spacing:1px; text-align:center; font-weight:bold;">SMI MOMENTUM FLOW</div>
             </div>`;
         }).join('');
     }
@@ -252,9 +292,11 @@ function renderDashboard(data) {
 
 window.onload = () => {
     const saved = localStorage.getItem('surgicalData');
-    if (saved) renderDashboard(JSON.parse(saved));
+    if (saved) {
+        try { renderDashboard(JSON.parse(saved)); } catch (e) { console.error(e); }
+    }
     setTimeout(triggerSync, 500);
-    setInterval(triggerSync, 15 * 60 * 1000);
+    setInterval(triggerSync, 5 * 60 * 1000); 
     const syncBtn = document.getElementById('sync-btn');
     if (syncBtn) syncBtn.onclick = triggerSync;
 };
