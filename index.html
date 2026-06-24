@@ -21,27 +21,23 @@
             </div>
         </header>
 
-        <!-- ==================== GATE 1: VOLATILITY THREAT LEVEL MATRIX ==================== -->
         <div class="gate-container" style="background:#0c0c0c; border:1px solid #222; border-radius:8px; padding:20px; margin-bottom:15px;">
             <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #222; padding-bottom:10px; margin-bottom:15px;">
                 <span style="font-size:0.75em; letter-spacing:2px; color:#ff3366; font-weight:bold;">🚨 GATE 1: VOLATILITY RISK FILTER (THE STORM CHECK)</span>
                 <span id="barometer-date" style="font-size:0.75em; color:#555;"></span>
             </div>
 
-            <!-- Dynamic System Tactical Threat Status Flag -->
             <div id="gate1-alert" style="border:1px solid #333; padding:12px; border-radius:6px; font-weight:bold; font-size:0.9em; letter-spacing:1px; text-align:center; margin-bottom:15px; background:#111;">
                 CALCULATING THEATRE WEATHER CONDITIONS...
             </div>
 
-            <!-- Macro Narrative Box -->
-            <div style="margin-bottom:15px;">
+            <div style="margin-bottom:20px;">
                 <div style="font-size:0.65em; color:#555; letter-spacing:1px; margin-bottom:5px;">REGIME ANALYSIS HEADLINE</div>
                 <h2 id="barometer-headline" style="margin:0; font-weight:normal; color:#fff; font-size:1.15em; line-height:1.5; letter-spacing:0.5px;">
                     Awaiting market engine calculation...
                 </h2>
             </div>
             
-            <!-- CONDITIONAL PRE-MARKET FUTURES DISPLAY PANEL -->
             <div id="premarket-futures-panel" style="display:none; margin-bottom:15px; padding:12px; background:#111; border:1px solid #ffcc00; border-radius:6px;">
                 <div style="font-size:0.65em; color:#ffcc00; letter-spacing:1px; font-weight:bold; margin-bottom:10px;">⏰ LIVE PRE-MARKET FUTURES ACTIVE (4:00 AM - 9:30 AM ET)</div>
                 <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap:15px;">
@@ -56,49 +52,104 @@
                 </div>
             </div>
             
-            <!-- VIX Centric Focus Sub-Panel -->
-            <div style="display:grid; grid-template-columns: 1fr;">
-                <div style="background:#111; padding:12px; border-radius:6px; border:1px solid #1a1a1a; display:flex; justify-content:space-between; align-items:center;">
+            <div style="background:#111; padding:15px; border-radius:6px; border:1px solid #1a1a1a;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
                     <div>
-                        <div style="font-size:0.6em; color:#888; letter-spacing:0.5px;">CBOE VOLATILITY INDEX (VIX)</div>
-                        <div style="font-size:0.6em; color:#444; margin-top:2px;">*Absolute Core Threshold Matrix</div>
+                        <div style="font-size:0.65em; color:#888; letter-spacing:0.5px; font-weight:bold;">CBOE VOLATILITY INDEX (SPOT ^VIX)</div>
+                        <div style="font-size:0.55em; color:#444; margin-top:2px;">*Active Running Weekly Candle Range Horizon</div>
                     </div>
-                    <div id="baro-vix" style="font-size:1.6em; font-weight:bold; color:#fff;">--</div>
+                    <div id="baro-vix" style="font-size:1.8em; font-weight:bold; color:#fff;">--</div>
+                </div>
+
+                <div class="tos-mini-track" style="height: 14px; margin-top: 5px; margin-bottom: 5px;">
+                    <div class="tos-center-axis" style="left: 50%;"></div>
+                    <div id="vix-tos-fill" class="tos-fill-bar"></div>
+                </div>
+
+                <div class="tos-labels" id="vix-tos-labels">
+                    <span style="color:#666;" id="vix-lbl-low">L: --</span>
+                    <span style="color:#666;" id="vix-lbl-high">H: --</span>
                 </div>
             </div>
         </div>
 
-        <!-- ==================== GATE 2: FIXED INCOME & METALS BALANCES ==================== -->
         <div class="gate-container" style="background:#0c0c0c; border:1px solid #222; border-radius:8px; padding:20px; margin-bottom:25px;">
             <div style="border-bottom:1px solid #222; padding-bottom:10px; margin-bottom:15px;">
                 <span style="font-size:0.75em; letter-spacing:2px; color:#ffcc00; font-weight:bold;">🏛️ GATE 2: CAPITAL GRAVITY & HARD ASSETS (YIELD TREND FILTER)</span>
             </div>
 
             <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap:15px;">
-                <div style="background:#111; padding:10px; border-radius:6px; border:1px solid #1a1a1a;">
-                    <div style="font-size:0.6em; color:#555;">2-YR TREASURY (US02Y)</div>
-                    <div id="baro-us02y" style="font-size:1.2em; font-weight:bold; color:#fff; margin-top:5px;">--</div>
+                <div style="background:#111; padding:10px; border-radius:6px; border:1px solid #1a1a1a; display:flex; flex-direction:column; justify-content:space-between;">
+                    <div>
+                        <div style="font-size:0.6em; color:#555;">2-YR TREASURY (US02Y)</div>
+                        <div id="baro-us02y" style="font-size:1.2em; font-weight:bold; color:#fff; margin-top:5px;">--</div>
+                    </div>
+                    <div>
+                        <div class="tos-mini-track" style="height: 10px; margin-top:8px; margin-bottom:4px;">
+                            <div class="tos-center-axis" style="left: 50%;"></div>
+                            <div id="us02y-tos-fill" class="tos-fill-bar"></div>
+                        </div>
+                        <div class="tos-labels" id="us02y-tos-labels">
+                            <span style="color:#666;" id="us02y-lbl-low">L: --</span>
+                            <span style="color:#666;" id="us02y-lbl-high">H: --</span>
+                        </div>
+                    </div>
                 </div>
-                <div style="background:#111; padding:10px; border-radius:6px; border:1px solid #1a1a1a;">
-                    <div style="font-size:0.6em; color:#555;">10-YR TREASURY (TNX)</div>
-                    <div id="baro-tnx" style="font-size:1.2em; font-weight:bold; color:#fff; margin-top:5px;">--</div>
+                <div style="background:#111; padding:10px; border-radius:6px; border:1px solid #1a1a1a; display:flex; flex-direction:column; justify-content:space-between;">
+                    <div>
+                        <div style="font-size:0.6em; color:#555;">10-YR TREASURY (TNX)</div>
+                        <div id="baro-tnx" style="font-size:1.2em; font-weight:bold; color:#fff; margin-top:5px;">--</div>
+                    </div>
+                    <div>
+                        <div class="tos-mini-track" style="height: 10px; margin-top:8px; margin-bottom:4px;">
+                            <div class="tos-center-axis" style="left: 50%;"></div>
+                            <div id="tnx-tos-fill" class="tos-fill-bar"></div>
+                        </div>
+                        <div class="tos-labels" id="tnx-tos-labels">
+                            <span style="color:#666;" id="tnx-lbl-low">L: --</span>
+                            <span style="color:#666;" id="tnx-lbl-high">H: --</span>
+                        </div>
+                    </div>
                 </div>
-                <div style="background:#111; padding:10px; border-radius:6px; border:1px solid #1a1a1a;">
-                    <div style="font-size:0.6em; color:#888;">GOLD TRUST (GLD)</div>
-                    <div id="baro-gld" style="font-size:1.2em; font-weight:bold; color:#ffcc00; margin-top:5px;">--</div>
+                <div style="background:#111; padding:10px; border-radius:6px; border:1px solid #1a1a1a; display:flex; flex-direction:column; justify-content:space-between;">
+                    <div>
+                        <div style="font-size:0.6em; color:#888;">GOLD TRUST (GLD)</div>
+                        <div id="baro-gld" style="font-size:1.2em; font-weight:bold; color:#ffcc00; margin-top:5px;">--</div>
+                    </div>
+                    <div>
+                        <div class="tos-mini-track" style="height: 10px; margin-top:8px; margin-bottom:4px;">
+                            <div class="tos-center-axis" style="left: 50%;"></div>
+                            <div id="gld-tos-fill" class="tos-fill-bar"></div>
+                        </div>
+                        <div class="tos-labels" id="gld-tos-labels">
+                            <span style="color:#666;" id="gld-lbl-low">L: --</span>
+                            <span style="color:#666;" id="gld-lbl-high">H: --</span>
+                        </div>
+                    </div>
                 </div>
-                <div style="background:#111; padding:10px; border-radius:6px; border:1px solid #1a1a1a;">
-                    <div style="font-size:0.6em; color:#888;">SILVER TRUST (SLV)</div>
-                    <div id="baro-slv" style="font-size:1.2em; font-weight:bold; color:#e5e5e5; margin-top:5px;">--</div>
+                <div style="background:#111; padding:10px; border-radius:6px; border:1px solid #1a1a1a; display:flex; flex-direction:column; justify-content:space-between;">
+                    <div>
+                        <div style="font-size:0.6em; color:#888;">SILVER TRUST (SLV)</div>
+                        <div id="baro-slv" style="font-size:1.2em; font-weight:bold; color:#e5e5e5; margin-top:5px;">--</div>
+                    </div>
+                    <div>
+                        <div class="tos-mini-track" style="height: 10px; margin-top:8px; margin-bottom:4px;">
+                            <div class="tos-center-axis" style="left: 50%;"></div>
+                            <div id="slv-tos-fill" class="tos-fill-bar"></div>
+                        </div>
+                        <div class="tos-labels" id="slv-tos-labels">
+                            <span style="color:#666;" id="slv-lbl-low">L: --</span>
+                            <span style="color:#666;" id="slv-lbl-high">H: --</span>
+                        </div>
+                    </div>
                 </div>
-                <div style="background:#1a1111; padding:10px; border-radius:6px; border:1px solid #331a1a; text-align:center;">
+                <div style="background:#1a1111; padding:10px; border-radius:6px; border:1px solid #331a1a; text-align:center; display:flex; flex-direction:column; justify-content:center;">
                     <div style="font-size:0.6em; color:#885555; font-weight:bold;">3.75% US02Y FLOOR</div>
                     <div id="baro-floor-status" style="font-size:1.1em; font-weight:bold; color:#ff3333; margin-top:5px;">CHECKING...</div>
                 </div>
             </div>
         </div>
 
-        <!-- ==================== GATE 3: THE SECTOR & INDEX ALLOCATION MAP ==================== -->
         <div class="flow-container">
             <div class="section-header" style="letter-spacing:1px; color:#00ffcc;">📊 GATE 3: ALLOCATION FOOTPRINT & ALPHA GROUPS (5-DAY TREND MATRIX)</div>
             <div class="section-header" style="font-size:0.65em; color:#444; margin-top:-5px; margin-bottom:15px; border:none;">Sector Rotation Tracker</div>
@@ -107,214 +158,15 @@
 
         <div id="data-grid" class="grid"></div>
 
-        <div style="margin-top:30px;">
-            <div class="section-header">Live Intel Feed</div>
-            <div id="news-tape" style="background:#0a0a0a; padding:15px; border-radius:8px; border:1px solid #222;"></div>
-        </div>
-
-        <!-- Console Calibration Label Anchor -->
         <div style="margin-top:20px; border-top:1px solid #1c1c1c; padding-top:10px; display:flex; justify-content:space-between; align-items:center;">
-            <span style="font-size:0.6em; color:#3a3a3a; letter-spacing:1px; font-weight:bold;">⚙️ HORIZON OVERRIDE ACTIVE</span>
-            <span style="font-size:0.6em; color:#444; letter-spacing:0.5px;">📊 NOTICE: ALL CONSOLE ASSET AND SECTOR COLOR HIGHLIGHTS DEVIATE FROM DAILY CLOSE AND ARE BOUND TO A 5-DAY ROLLING MOMENTUM CHANNEL.</span>
+            <span style="font-size:0.6em; color:#3a3a3a; letter-spacing:1px; font-weight:bold;">⚙️ WEEKLY STRUCTURAL OVERRIDE ACTIVE</span>
+            <span style="font-size:0.6em; color:#444; letter-spacing:0.5px;">📊 NOTICE: HIGH/LOW BARS MEASURE CURRENT RUNNING WEEK CANDLE BOUNDARIES ACCORDING TO GENUINE THINKORSWIM PLATFORM PARITY.</span>
         </div>
     </div>
 
     <script src="js/config.js"></script>
     <script src="js/marketEngine.js"></script>
-    <script>
-        function updateClock() {
-            document.getElementById('clock').innerText = new Date().toLocaleTimeString();
-        }
-        setInterval(updateClock, 1000);
-
-        async function triggerSync() {
-            const btn = document.getElementById('sync-btn');
-            btn.innerText = "SYNCING...";
-            try {
-                // Change "VXX" to "%5EVIX"
-const symbols = ["SPY", "DIA", "QQQ", "IWM", "%5EVIX", "%5ETNX", "XLK", "XLF", "XLV", "XLY", "GLD", "SLV", "ES=F", "RTY=F"];
-                const data = await fetchMarketData(symbols);
-                data.news = await fetchNews();
-                localStorage.setItem('surgicalData', JSON.stringify(data));
-                renderDashboard(data);
-            } catch (e) {
-                console.error(e);
-            }
-            btn.innerText = "Refresh Theatre";
-        }
-
-        function getSmiClass(val) {
-            if (val >= 40) return 'smi-ext-up';
-            if (val >= 0) return 'smi-up';
-            if (val <= -40) return 'smi-ext-down';
-            return 'smi-down';
-        }
-
-        function renderDashboard(data) {
-            if (data && data.indices) {
-                document.getElementById('barometer-date').innerText = new Date().toLocaleDateString(undefined, {
-                    weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
-                });
-
-                const us02yVal = data.indices["VXX"] ? (data.yield * 0.93).toFixed(2) + "%" : "4.17%"; 
-                const tnxVal = data.indices["TNX"] ? parseFloat(data.indices["TNX"].price).toFixed(2) + "%" : "--";
-                const vixVal = data.indices["VIX"] ? data.indices["VIX"].price : "--";
-                const gldVal = data.indices["GLD"] ? "$" + data.indices["GLD"].price : "--";
-                const slvVal = data.indices["SLV"] ? "$" + data.indices["SLV"].price : "--";
-
-                const rawUs02y = parseFloat(us02yVal);
-                const isFloorHeld = rawUs02y >= 3.75;
-                
-                document.getElementById('baro-us02y').innerText = us02yVal;
-                document.getElementById('baro-tnx').innerText = tnxVal;
-                document.getElementById('baro-vix').innerText = vixVal;
-                document.getElementById('baro-gld').innerText = gldVal;
-                document.getElementById('baro-slv').innerText = slvVal;
-
-                const floorBadge = document.getElementById('baro-floor-status');
-                if (isFloorHeld) {
-                    floorBadge.innerText = "HELD 💪";
-                    floorBadge.style.color = "#00ffcc";
-                } else {
-                    floorBadge.innerText = "BROKEN 🚨";
-                    floorBadge.style.color = "#ff3366";
-                }
-
-                const tnxData = data.indices["TNX"];
-                const vixData = data.indices["VXX"];
-                const gldData = data.indices["GLD"];
-                const slvData = data.indices["SLV"];
-                const esData = data.indices["ES=F"];
-                const rtyData = data.indices["RTY=F"];
-
-                const applyMomentumColor = (elementId, tickerData) => {
-                    if (!tickerData || tickerData.change5d === undefined) {
-                        document.getElementById(elementId).style.color = "#ffffff";
-                        return;
-                    }
-                    document.getElementById(elementId).style.color = tickerData.change5d >= 0 ? "#00ffcc" : "#ff3366";
-                };
-
-                applyMomentumColor('baro-us02y', tnxData); 
-                applyMomentumColor('baro-tnx', tnxData);
-                applyMomentumColor('baro-gld', gldData);
-                applyMomentumColor('baro-slv', slvData);
-
-                // ==================== TIME ENGINE: PRE-MARKET CONTROL SWITCH ====================
-                const options = { timeZone: "America/New_York", hour: "numeric", minute: "numeric", hour12: false };
-                const etParts = new Intl.DateTimeFormat([], options).formatToParts(new Date());
-                const etHour = parseInt(etParts.find(p => p.type === "hour").value, 10);
-                const etMin = parseInt(etParts.find(p => p.type === "minute").value, 10);
-                const etTimeFloat = etHour + (etMin / 60);
-
-                const futuresPanel = document.getElementById('premarket-futures-panel');
-                
-                if (etTimeFloat >= 4.0 && etTimeFloat < 9.5) {
-                    futuresPanel.style.display = "block";
-                    
-                    document.getElementById('baro-es-futures').innerText = esData ? "$" + esData.price : "--";
-                    document.getElementById('baro-rty-futures').innerText = rtyData ? "$" + rtyData.price : "--";
-                    
-                    applyMomentumColor('baro-es-futures', esData);
-                    applyMomentumColor('baro-rty-futures', rtyData);
-                } else {
-                    futuresPanel.style.display = "none";
-                }
-
-                // ==================== ENHANCED ABSOLUTE VIX & GATE 1 ALERTS ====================
-                const rawVix = parseFloat(vixVal);
-                const gate1AlertBox = document.getElementById('gate1-alert');
-                const vixDisplayElement = document.getElementById('baro-vix');
-
-                if (rawVix > 20) {
-                    vixDisplayElement.style.color = "#ff3366"; 
-                    gate1AlertBox.innerText = "🛑 DO NOT ENTER, MARKET UNFAVORABLE";
-                    gate1AlertBox.style.color = "#ff3366";
-                    gate1AlertBox.style.borderColor = "#ff3366";
-                    gate1AlertBox.style.background = "#1a0d0f";
-                } else if (rawVix < 14) {
-                    vixDisplayElement.style.color = "#00ffcc"; 
-                    gate1AlertBox.innerText = "🟢 CLEAR SYSTEM PARITY: CONDITIONS FAVORABLE FOR LONG DEPLOYMENT";
-                    gate1AlertBox.style.color = "#00ffcc";
-                    gate1AlertBox.style.borderColor = "#00ffcc";
-                    gate1AlertBox.style.background = "#091412";
-                } else {
-                    vixDisplayElement.style.color = "#ffcc00"; 
-                    gate1AlertBox.innerText = "⚠️ CAUTION: MARKET CONDITIONS UNSETTLED (ELEVATED NOISE)";
-                    gate1AlertBox.style.color = "#ffcc00";
-                    gate1AlertBox.style.borderColor = "#ffcc00";
-                    gate1AlertBox.style.background = "#1a160d";
-                }
-
-                let generatedHeadline =
-                    "THE COILED SPRING TIGHTENS: NEW HAWKISH FED FRAMEWORK REVERTS VOLATILITY SKIES AS BOND MARKET LOCKS IN 'HIGHER-FOR-LONG' BALANCES.";
-
-                if (rawVix > 18) {
-                    generatedHeadline =
-                        "TECH DE-RISKING ACCELERATES: DEFLATING MULTIPLES FORCE ASSET VOLATILITY SPIKE AS ROTATION MOVES TOWARD ASSET-BACKED VALUE BASES.";
-                } else if (rawVix < 14) {
-                    generatedHeadline =
-                        "COMPLACENCY DOMINATES EQUITIES: SMART MONEY MONITORS UNDER-THE-HOOD YIELD DRIVERS AHEAD OF MACRO INFLATION REBALANCING.";
-                }
-                document.getElementById('barometer-headline').innerText = generatedHeadline;
-            }
-            if (!data || !data.indices) return;
-            document.getElementById('timestamp').innerText = "Last Intel Sync: " + data.ts;
-
-            const grid = document.getElementById('data-grid');
-            // FIXED LINE HERE: Properly added the comma to unpack ticker AND val objects safely
-            grid.innerHTML = Object.entries(data.indices).map(([ticker, val]) => {
-                if (ticker === "GLD" || ticker === "SLV" || ticker === "ES=F" || ticker === "RTY=F") return '';
-                
-                const gapNum = parseFloat(val.valueGap);
-                const gapClass = gapNum >= 0 ? 'gap-pos' : 'gap-neg';
-                
-                const change5dNum = val.change5d !== undefined ? val.change5d : 0;
-                const priceColorClass = change5dNum >= 0 ? 'gap-pos' : 'gap-neg';
-                const cardMomentumClass = change5dNum >= 0 ? 'up' : 'down';
-                
-                const smiClass = getSmiClass(val.smi);
-                return `
-                <div class="card ${cardMomentumClass}">
-                    <h3 style="color:#888">${ticker}</h3>
-                    <div class="price ${priceColorClass}">$${val.price}</div>
-                    <div class="metrics">
-                        SMI: <span class="${smiClass}">${val.smi}</span> | 
-                        Gap: <span class="${gapClass}">${val.valueGap}</span>
-                    </div>
-                    <div class="status">${val.conf}</div>
-                </div>`;
-            }).join('');
-
-            const flowGrid = document.getElementById('money-flow-rank');
-            flowGrid.innerHTML = (data.moneyFlow || []).map((s, i) => {
-                const sectorData = data.indices[s.ticker];
-                const change5dNum = (sectorData && sectorData.change5d !== undefined) ? sectorData.change5d : 0;
-
-                const flowBarClass = change5dNum >= 0 ? 'flow-up' : 'flow-down';
-                const scoreColor = change5dNum >= 0 ? 'flow-bullish' : 'flow-bearish';
-
-                return `
-                <div class="flow-card ${flowBarClass} ${i === 0 ? 'leader' : ''}">
-                    <div style="font-weight:bold; color:#888; margin-bottom:5px;">${s.ticker}</div>
-                    <div class="score-val ${i === 0 ? '' : scoreColor}">${s.score}</div>
-                    <div style="font-size:0.65em; color:#555; letter-spacing:1px;">FLOW SCORE</div>
-                </div>
-            `
-            }).join('');
-
-            document.getElementById('news-tape').innerHTML = (data.news || []).map(n => `
-                <div class="news-item"><a href="${n.link}" target="_blank">${n.title}</a></div>
-            `).join('');
-        }
-
-        window.onload = () => {
-            const saved = localStorage.getItem('surgicalData');
-            if (saved) renderDashboard(JSON.parse(saved));
-            setTimeout(triggerSync, 500);
-            document.getElementById('sync-btn').onclick = triggerSync;
-        };
-    </script>
+    <script src="js/dashboard.js"></script>
 </body>
 
 </html>

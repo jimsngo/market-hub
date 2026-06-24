@@ -1,6 +1,5 @@
 const PROXY = "https://script.google.com/macros/s/AKfycbzA28YtFZenD8vH4tTDU95C2Mowv4uOTeGuCU_ipkkk7YpMnt-zDuxQ-EHMkfXiqIMY/exec?url=";
 
-// Utility to create a tiny delay between rapid-fire API hits
 const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
 async function fetchMarketData(symbols) {
@@ -8,10 +7,9 @@ async function fetchMarketData(symbols) {
 
     for (let sym of symbols) {
         try {
-            // Space out requests by 150ms to completely prevent Google CORS rate-limiting blocks
-            await sleep(150);
+            await sleep(150); // Proxy firewall safety pacing
 
-            const url = `https://query1.finance.yahoo.com/v8/finance/chart/${sym}?interval=1d&range=3mo`;
+            const url = `https://query1.finance.yahoo.com/v8/finance/chart/${sym}?interval=1wk&range=1y`;
             const response = await fetch(PROXY + encodeURIComponent(url));
             const raw = await response.json();
             
@@ -22,38 +20,53 @@ async function fetchMarketData(symbols) {
 
                 const history = res.timestamp.map((t, i) => ({
                     c: ind.close[i], h: ind.high[i], l: ind.low[i]
-                })).filter(d => d.c !== null).slice(-50);
+                })).filter(d => d.c !== null && d.h !== null && d.l !== null);
 
-                const last = history[history.length - 1];
-                const prev = history[history.length - 2];
+                // Isolate current active running week bar
+                const last = history[history.length - 1]; 
+                const prev = history[history.length - 2]; 
                 const smaValue = history.reduce((acc, val) => acc + val.c, 0) / history.length;
                 
-                const hh = Math.max(...history.map(d => d.h));
-                const ll = Math.min(...history.map(d => d.l));
-                const center = (hh + ll) / 2;
-                const range = (hh - ll) / 2;
-                const smiValue = range !== 0 ? Math.round(((last.c - center) / range) * 100) : 0;
+                const currentPrice = last.c;
+                const weekHigh = last.h;
+                const weekLow = last.l;
+                
+                // Calculate position relative to weekly HL2 midpoint
+                let currentPct = 50;
+                const weekRange = weekHigh - weekLow;
+                if (weekRange > 0) {
+                    currentPct = ((currentPrice - weekLow) / weekRange) * 100;
+                }
+                currentPct = Math.max(0, Math.min(100, currentPct));
 
                 const changePct = ((last.c - prev.c) / prev.c * 100).toFixed(2);
 
-                const prev5 = history.length >= 6 ? history[history.length - 6] : history[0];
-                const change5dPct = (((last.c - prev5.c) / prev5.c) * 100).toFixed(2);
+                // Pure Weekly SMI(10) lookback slicing
+                const len10Weeks = history.slice(-10);
+                const macroHigh = Math.max(...len10Weeks.map(d => d.h));
+                const macroLow = Math.min(...len10Weeks.map(d => d.l));
+                const center = (macroHigh + macroLow) / 2;
+                const range = (macroHigh - macroLow) / 2;
+                
+                const smiValue = range !== 0 ? Math.round(((last.c - center) / range) * 100) : 0;
 
                 results.indices[ticker] = {
-                    price: last.c.toFixed(2),
+                    price: currentPrice.toFixed(2),
                     dailyChange: changePct,
-                    change5d: parseFloat(change5dPct),
+                    change5d: parseFloat(changePct), 
                     smi: smiValue,
-                    conf: (last.c > smaValue && smiValue > 0) ? "UP" : "DOWN",
-                    valueGap: "N/A"
+                    conf: (currentPrice > smaValue && smiValue > 0) ? "UP" : "DOWN",
+                    valueGap: "N/A",
+                    weekHigh: weekHigh.toFixed(2),
+                    weekLow: weekLow.toFixed(2),
+                    currentPct: currentPct.toFixed(1)
                 };
 
-                if (ticker === "TNX") results.yield = parseFloat(last.c);
+                if (ticker === "TNX") results.yield = currentPrice;
             }
         } catch (e) { console.error(e); }
     }
 
-    // Value Gap Math (Earnings Yield - Bond Yield)
     Object.keys(results.indices).forEach(key => {
         const cfg = indexConfigs[key];
         if (cfg && cfg.pe > 0 && key !== 'TNX') {
@@ -63,7 +76,6 @@ async function fetchMarketData(symbols) {
         }
     });
 
-    // Money Flow Sorting (Sectors Only)
     const sectors = ["XLK", "XLF", "XLV", "XLY"];
     results.moneyFlow = sectors
         .filter(s => results.indices[s])
@@ -71,13 +83,4 @@ async function fetchMarketData(symbols) {
         .sort((a, b) => b.score - a.score);
 
     return results;
-}
-
-async function fetchNews() {
-    try {
-        const url = "https://query1.finance.yahoo.com/v1/finance/search?q=stock-market&newsCount=15";
-        const response = await fetch(PROXY + encodeURIComponent(url));
-        const data = await response.json();
-        return (data.news || []).map(item => ({ title: item.title, link: item.link }));
-    } catch (e) { return []; }
 }
