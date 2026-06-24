@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Surgical Hub | Tactical Risk Console</title>
+    <!-- Combined CSS Architecture -->
     <link rel="stylesheet" href="css/style.css">
 </head>
 
@@ -21,16 +22,19 @@
             </div>
         </header>
 
+        <!-- ==================== GATE 1: VOLATILITY THREAT LEVEL MATRIX ==================== -->
         <div class="gate-container" style="background:#0c0c0c; border:1px solid #222; border-radius:8px; padding:20px; margin-bottom:15px;">
             <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #222; padding-bottom:10px; margin-bottom:15px;">
                 <span style="font-size:0.75em; letter-spacing:2px; color:#ff3366; font-weight:bold;">🚨 GATE 1: VOLATILITY RISK FILTER (THE STORM CHECK)</span>
                 <span id="barometer-date" style="font-size:0.75em; color:#555;"></span>
             </div>
 
+            <!-- Dynamic System Tactical Threat Status Flag -->
             <div id="gate1-alert" style="border:1px solid #333; padding:12px; border-radius:6px; font-weight:bold; font-size:0.9em; letter-spacing:1px; text-align:center; margin-bottom:15px; background:#111;">
                 CALCULATING THEATRE WEATHER CONDITIONS...
             </div>
 
+            <!-- Macro Narrative Box -->
             <div style="margin-bottom:20px;">
                 <div style="font-size:0.65em; color:#555; letter-spacing:1px; margin-bottom:5px;">REGIME ANALYSIS HEADLINE</div>
                 <h2 id="barometer-headline" style="margin:0; font-weight:normal; color:#fff; font-size:1.15em; line-height:1.5; letter-spacing:0.5px;">
@@ -38,6 +42,7 @@
                 </h2>
             </div>
             
+            <!-- CONDITIONAL PRE-MARKET FUTURES DISPLAY PANEL -->
             <div id="premarket-futures-panel" style="display:none; margin-bottom:15px; padding:12px; background:#111; border:1px solid #ffcc00; border-radius:6px;">
                 <div style="font-size:0.65em; color:#ffcc00; letter-spacing:1px; font-weight:bold; margin-bottom:10px;">⏰ LIVE PRE-MARKET FUTURES ACTIVE (4:00 AM - 9:30 AM ET)</div>
                 <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap:15px;">
@@ -52,6 +57,7 @@
                 </div>
             </div>
             
+            <!-- TOS CURRENT ACTIVE WEEK HIGH/LOW GRAPH COMPONENT -->
             <div style="background:#111; padding:15px; border-radius:6px; border:1px solid #1a1a1a;">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
                     <div>
@@ -61,6 +67,7 @@
                     <div id="baro-vix" style="font-size:1.8em; font-weight:bold; color:#fff;">--</div>
                 </div>
 
+                <!-- Asymmetrical Midpoint Range Bar Track -->
                 <div class="tos-mini-track" style="height: 14px; margin-top: 5px; margin-bottom: 5px;">
                     <div class="tos-center-axis" style="left: 50%;"></div>
                     <div id="vix-tos-fill" class="tos-fill-bar"></div>
@@ -73,6 +80,7 @@
             </div>
         </div>
 
+        <!-- ==================== GATE 2: FIXED INCOME & METALS BALANCES ==================== -->
         <div class="gate-container" style="background:#0c0c0c; border:1px solid #222; border-radius:8px; padding:20px; margin-bottom:25px;">
             <div style="border-bottom:1px solid #222; padding-bottom:10px; margin-bottom:15px;">
                 <span style="font-size:0.75em; letter-spacing:2px; color:#ffcc00; font-weight:bold;">🏛️ GATE 2: CAPITAL GRAVITY & HARD ASSETS (YIELD TREND FILTER)</span>
@@ -89,9 +97,12 @@
                             <div class="tos-center-axis" style="left: 50%;"></div>
                             <div id="us02y-tos-fill" class="tos-fill-bar"></div>
                         </div>
-                        <div class="tos-labels" id="us02y-tos-labels">
+                        <div class="tos-labels" style="margin-bottom: 4px;">
                             <span style="color:#666;" id="us02y-lbl-low">L: --</span>
                             <span style="color:#666;" id="us02y-lbl-high">H: --</span>
+                        </div>
+                        <div style="font-size:0.55em; border-top:1px solid #1d1d1d; padding-top:4px; color:#555;">
+                            SMI(10): <span id="us02y-smi">--</span>
                         </div>
                     </div>
                 </div>
@@ -105,9 +116,12 @@
                             <div class="tos-center-axis" style="left: 50%;"></div>
                             <div id="tnx-tos-fill" class="tos-fill-bar"></div>
                         </div>
-                        <div class="tos-labels" id="tnx-tos-labels">
+                        <div class="tos-labels" style="margin-bottom: 4px;">
                             <span style="color:#666;" id="tnx-lbl-low">L: --</span>
                             <span style="color:#666;" id="tnx-lbl-high">H: --</span>
+                        </div>
+                        <div style="font-size:0.55em; border-top:1px solid #1d1d1d; padding-top:4px; color:#555;">
+                            SMI(10): <span id="tnx-smi">--</span>
                         </div>
                     </div>
                 </div>
@@ -121,9 +135,12 @@
                             <div class="tos-center-axis" style="left: 50%;"></div>
                             <div id="gld-tos-fill" class="tos-fill-bar"></div>
                         </div>
-                        <div class="tos-labels" id="gld-tos-labels">
+                        <div class="tos-labels" style="margin-bottom: 4px;">
                             <span style="color:#666;" id="gld-lbl-low">L: --</span>
                             <span style="color:#666;" id="gld-lbl-high">H: --</span>
+                        </div>
+                        <div style="font-size:0.55em; border-top:1px solid #1d1d1d; padding-top:4px; color:#555;">
+                            SMI(10): <span id="gld-smi">--</span>
                         </div>
                     </div>
                 </div>
@@ -137,9 +154,12 @@
                             <div class="tos-center-axis" style="left: 50%;"></div>
                             <div id="slv-tos-fill" class="tos-fill-bar"></div>
                         </div>
-                        <div class="tos-labels" id="slv-tos-labels">
+                        <div class="tos-labels" style="margin-bottom: 4px;">
                             <span style="color:#666;" id="slv-lbl-low">L: --</span>
                             <span style="color:#666;" id="slv-lbl-high">H: --</span>
+                        </div>
+                        <div style="font-size:0.55em; border-top:1px solid #1d1d1d; padding-top:4px; color:#555;">
+                            SMI(10): <span id="slv-smi">--</span>
                         </div>
                     </div>
                 </div>
@@ -150,6 +170,7 @@
             </div>
         </div>
 
+        <!-- ==================== GATE 3: THE SECTOR & INDEX ALLOCATION MAP ==================== -->
         <div class="flow-container">
             <div class="section-header" style="letter-spacing:1px; color:#00ffcc;">📊 GATE 3: ALLOCATION FOOTPRINT & ALPHA GROUPS (5-DAY TREND MATRIX)</div>
             <div class="section-header" style="font-size:0.65em; color:#444; margin-top:-5px; margin-bottom:15px; border:none;">Sector Rotation Tracker</div>
@@ -158,12 +179,14 @@
 
         <div id="data-grid" class="grid"></div>
 
+        <!-- System Architecture Footnote Documentation -->
         <div style="margin-top:20px; border-top:1px solid #1c1c1c; padding-top:10px; display:flex; justify-content:space-between; align-items:center;">
             <span style="font-size:0.6em; color:#3a3a3a; letter-spacing:1px; font-weight:bold;">⚙️ WEEKLY STRUCTURAL OVERRIDE ACTIVE</span>
             <span style="font-size:0.6em; color:#444; letter-spacing:0.5px;">📊 NOTICE: HIGH/LOW BARS MEASURE CURRENT RUNNING WEEK CANDLE BOUNDARIES ACCORDING TO GENUINE THINKORSWIM PLATFORM PARITY.</span>
         </div>
     </div>
 
+    <!-- Script Execution Pipelines -->
     <script src="js/config.js"></script>
     <script src="js/marketEngine.js"></script>
     <script src="js/dashboard.js"></script>

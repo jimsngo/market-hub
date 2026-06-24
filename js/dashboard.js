@@ -1,5 +1,6 @@
 function updateClock() {
-    document.getElementById('clock').innerText = new Date().toLocaleTimeString();
+    const el = document.getElementById('clock');
+    if (el) el.innerText = new Date().toLocaleTimeString();
 }
 setInterval(updateClock, 1000);
 
@@ -15,14 +16,23 @@ async function triggerSync() {
     if (btn) btn.innerText = "Refresh Theatre";
 }
 
-function getSmiClass(val) {
-    if (val >= 40) return 'smi-ext-up';
-    if (val >= 0) return 'smi-up';
-    if (val <= -40) return 'smi-ext-down';
-    return 'smi-down';
+// Unified Tiered Momentum Color Assigner
+function getSmiStyleProperties(val) {
+    const score = parseFloat(val);
+    if (isNaN(score)) return { color: "#ffffff", weight: "normal" };
+
+    if (score >= 50) {
+        return { color: "#fbbf24", weight: "bold" }; // Strong Buy = Yellow (#fbbf24)
+    } else if (score >= 0) {
+        return { color: "#4ade80", weight: "bold" }; // Buy = Green (#4ade80)
+    } else if (score >= -50) {
+        return { color: "#ff9f43", weight: "bold" }; // Sell = Orange (#ff9f43)
+    } else {
+        return { color: "#ff5f5f", weight: "bold" }; // Strong Sell = Red (#ff5f5f)
+    }
 }
 
-// Global UI utility to draw standard TOS midpoint bars dynamically
+// Utility to apply center-anchored block tracking styles to any element
 function applyTosFillStyle(element, percentage) {
     if (!element) return;
     const pct = parseFloat(percentage);
@@ -46,9 +56,12 @@ function applyTosFillStyle(element, percentage) {
 function renderDashboard(data) {
     if (!data || !data.indices) return;
 
-    document.getElementById('barometer-date').innerText = new Date().toLocaleDateString(undefined, {
-        weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
-    });
+    const bDate = document.getElementById('barometer-date');
+    if (bDate) {
+        bDate.innerText = new Date().toLocaleDateString(undefined, {
+            weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+        });
+    }
 
     const us02yVal = data.indices["VIX"] ? (data.yield * 0.93).toFixed(2) + "%" : "4.17%"; 
     const tnxVal = data.indices["TNX"] ? parseFloat(data.indices["TNX"].price).toFixed(2) + "%" : "--";
@@ -59,11 +72,11 @@ function renderDashboard(data) {
     const rawUs02y = parseFloat(us02yVal);
     const isFloorHeld = rawUs02y >= 3.75;
     
-    document.getElementById('baro-us02y').innerText = us02yVal;
-    document.getElementById('baro-tnx').innerText = tnxVal;
-    document.getElementById('baro-vix').innerText = vixVal;
-    document.getElementById('baro-gld').innerText = gldVal;
-    document.getElementById('baro-slv').innerText = slvVal;
+    const elUs02y = document.getElementById('baro-us02y'); if (elUs02y) elUs02y.innerText = us02yVal;
+    const elTnx = document.getElementById('baro-tnx'); if (elTnx) elTnx.innerText = tnxVal;
+    const elVix = document.getElementById('baro-vix'); if (elVix) elVix.innerText = vixVal;
+    const elGld = document.getElementById('baro-gld'); if (elGld) elGld.innerText = gldVal;
+    const elSlv = document.getElementById('baro-slv'); if (elSlv) elSlv.innerText = slvVal;
 
     const floorBadge = document.getElementById('baro-floor-status');
     if (floorBadge) {
@@ -114,7 +127,7 @@ function renderDashboard(data) {
         futuresPanel.style.display = "none";
     }
 
-    // ==================== GATE 1 COMPONENT RENDERING ====================
+    // ==================== GATE 1 RENDERING ====================
     if (vixData) {
         applyTosFillStyle(document.getElementById('vix-tos-fill'), vixData.currentPct);
         const lEl = document.getElementById('vix-lbl-low');
@@ -123,12 +136,11 @@ function renderDashboard(data) {
         if (hEl) hEl.innerText = `H: ${vixData.weekHigh}`;
     }
 
-    // ==================== GATE 2 COMPONENT RENDERING ====================
+    // ==================== GATE 2 RENDERING WITH COLOR FORMATTING ====================
     if (tnxData) {
         applyTosFillStyle(document.getElementById('tnx-tos-fill'), tnxData.currentPct);
         applyTosFillStyle(document.getElementById('us02y-tos-fill'), tnxData.currentPct);
         
-        // Populate Yield Text Anchors
         const tnxL = document.getElementById('tnx-lbl-low'); const tnxH = document.getElementById('tnx-lbl-high');
         const us02yL = document.getElementById('us02y-lbl-low'); const us02yH = document.getElementById('us02y-lbl-high');
         
@@ -136,18 +148,49 @@ function renderDashboard(data) {
         if (tnxH) tnxH.innerText = `H: ${tnxData.weekHigh}%`;
         if (us02yL) us02yL.innerText = `L: ${(parseFloat(tnxData.weekLow) * 0.93).toFixed(2)}%`;
         if (us02yH) us02yH.innerText = `H: ${(parseFloat(tnxData.weekHigh) * 0.93).toFixed(2)}%`;
+
+        const tnxSmiEl = document.getElementById('tnx-smi');
+        const us02ySmiEl = document.getElementById('us02y-smi');
+        const yieldStyles = getSmiStyleProperties(tnxData.smi);
+
+        if (tnxSmiEl) {
+            tnxSmiEl.innerText = tnxData.smi;
+            tnxSmiEl.style.color = yieldStyles.color;
+            tnxSmiEl.style.fontWeight = yieldStyles.weight;
+        }
+        if (us02ySmiEl) {
+            us02ySmiEl.innerText = tnxData.smi;
+            us02ySmiEl.style.color = yieldStyles.color;
+            us02ySmiEl.style.fontWeight = yieldStyles.weight;
+        }
     }
     if (gldData) {
         applyTosFillStyle(document.getElementById('gld-tos-fill'), gldData.currentPct);
         const gldL = document.getElementById('gld-lbl-low'); const gldH = document.getElementById('gld-lbl-high');
         if (gldL) gldL.innerText = `L: $${gldData.weekLow}`;
         if (gldH) gldH.innerText = `H: $${gldData.weekHigh}`;
+
+        const gldSmiEl = document.getElementById('gld-smi');
+        if (gldSmiEl) {
+            const styles = getSmiStyleProperties(gldData.smi);
+            gldSmiEl.innerText = gldData.smi;
+            gldSmiEl.style.color = styles.color;
+            gldSmiEl.style.fontWeight = styles.weight;
+        }
     }
     if (slvData) {
         applyTosFillStyle(document.getElementById('slv-tos-fill'), slvData.currentPct);
         const slvL = document.getElementById('slv-lbl-low'); const slvH = document.getElementById('slv-lbl-high');
         if (slvL) slvL.innerText = `L: $${slvData.weekLow}`;
         if (slvH) slvH.innerText = `H: $${slvData.weekHigh}`;
+
+        const slvSmiEl = document.getElementById('slv-smi');
+        if (slvSmiEl) {
+            const styles = getSmiStyleProperties(slvData.smi);
+            slvSmiEl.innerText = slvData.smi;
+            slvSmiEl.style.color = styles.color;
+            slvSmiEl.style.fontWeight = styles.weight;
+        }
     }
 
     // ==================== AUTOMATED RISK HEADLINE MONITOR ====================
@@ -192,7 +235,7 @@ function renderDashboard(data) {
     const tsEl = document.getElementById('timestamp');
     if (tsEl) tsEl.innerText = "Last Intel Sync: " + data.ts;
 
-    // ==================== MASTER CARD GRID INJECTION INTERFACE ====================
+    // ==================== GATE 3 CARDS RENDERING WITH COLOR FORMATTING ====================
     const grid = document.getElementById('data-grid');
     if (grid) {
         grid.innerHTML = Object.entries(data.indices).map(([ticker, val]) => {
@@ -204,8 +247,9 @@ function renderDashboard(data) {
             const change5dNum = val.change5d !== undefined ? val.change5d : 0;
             const priceColorClass = change5dNum >= 0 ? 'gap-pos' : 'gap-neg';
             const cardMomentumClass = change5dNum >= 0 ? 'up' : 'down';
-            const smiClass = getSmiClass(val.smi);
+            
             const currentPct = val.currentPct !== undefined ? parseFloat(val.currentPct) : 50;
+            const smiStyles = getSmiStyleProperties(val.smi);
 
             let fillBarStyle = '';
             if (currentPct >= 50) {
@@ -235,27 +279,28 @@ function renderDashboard(data) {
                 </div>
 
                 <div class="metrics" style="font-size:0.65em; margin-top:8px; border-top:1px solid #151515; padding-top:8px;">
-                    SMI(10): <span class="${smiClass}">${val.smi}</span> | 
+                    SMI(10): <span style="color:${smiStyles.color}; font-weight:${smiStyles.weight};">${val.smi}</span> | 
                     Gap: <span class="${gapClass}">${val.valueGap}</span>
                 </div>
             </div>`;
         }).join('');
     }
 
-    // Sector rotation renderer
+    // ==================== GATE 3 SECTOR SCOREBOARD ROTATOR WITH COLOR FORMATTING ====================
     const flowGrid = document.getElementById('money-flow-rank');
     if (flowGrid) {
         flowGrid.innerHTML = (data.moneyFlow || []).map((s, i) => {
             const sectorData = data.indices[s.ticker];
             const change5dNum = (sectorData && sectorData.change5d !== undefined) ? sectorData.change5d : 0;
             const flowBarClass = change5dNum >= 0 ? 'flow-up' : 'flow-down';
-            const scoreColor = change5dNum >= 0 ? 'flow-bullish' : 'flow-bearish';
+            
+            const textStyles = getSmiStyleProperties(s.score);
 
             return `
             <div class="flow-card ${flowBarClass} ${i === 0 ? 'leader' : ''}">
                 <div style="font-weight:bold; color:#888; margin-bottom:5px;">${s.ticker}</div>
-                <div class="score-val ${i === 0 ? '' : scoreColor}">${s.score}</div>
-                <div style="font-size:0.65em; color:#555; letter-spacing:1px;">FLOW SCORE</div>
+                <div class="score-val" style="color:${textStyles.color}; font-weight:${textStyles.weight};">${s.score}</div>
+                <div style="font-size:0.65em; color:#555; letter-spacing:1px;">SMI(10) SCORE</div>
             </div>`;
         }).join('');
     }
