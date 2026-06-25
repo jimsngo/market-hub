@@ -10,56 +10,42 @@ const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
 // --- SURGICAL INDICATOR HELPERS ---
 
-// Generates a sequentially smoothed EMA array to allow precise double smoothing
-function calculateEMAArray(data, period) {
-    if (!data.length) return [];
-    const k = 2 / (period + 1);
-    let ema = data[0];
-    const results = [ema];
-    for (let i = 1; i < data.length; i++) {
-        ema = (data[i] - ema) * k + ema;
-        results.push(ema);
-    }
-    return results;
-}
+// Standard Technical Ichimoku (9, 26) Equilibrium Midpoint Engine
+function calculateIchimoku(history) {
+    // Safety drop if there isn't enough historical depth to compute the Kijun baseline
+    if (history.length < 26) return { tenkan: 0, kijun: 0, trend: "Neutral", distanceKijun: 0 };
 
-// Custom Technical SMI: 10-day Momentum Engine with 5-day Normalization Window
-function calculateSurgicalSMI(history) {
-    const rangeLength = 5; // 5-day high/low filter
-    const smooth = 3;      // Double smoothing length
-    
-    if (history.length < 15) return 0;
-    
-    let diffs = [];
-    let ranges = [];
-    
-    // Compute raw metrics across the historical window
-    for (let i = rangeLength - 1; i < history.length; i++) {
-        const slice = history.slice(i - rangeLength + 1, i + 1);
-        const h = Math.max(...slice.map(d => d.h));
-        const l = Math.min(...slice.map(d => d.l));
-        const c = history[i].c;
-        
-        const range = h - l;
-        const midpoint = (h + l) / 2;
-        
-        diffs.push(c - midpoint);
-        ranges.push(range);
+    const slice9 = history.slice(-9);   // Calibrated to standard 9-period lookback
+    const slice26 = history.slice(-26); // Calibrated to standard 26-period lookback
+    const currentPrice = history[history.length - 1].c;
+
+    // Tenkan-Sen (9-period midpoint)
+    const high9 = Math.max(...slice9.map(d => d.h));
+    const low9 = Math.min(...slice9.map(d => d.l));
+    const tenkan = (high9 + low9) / 2;
+
+    // Kijun-Sen (26-period midpoint)
+    const high26 = Math.max(...slice26.map(d => d.h));
+    const low26 = Math.min(...slice26.map(d => d.l));
+    const kijun = (high26 + low26) / 2;
+
+    // Establish pure structural posture status
+    let trend = "Neutral";
+    if (currentPrice > tenkan && currentPrice > kijun) {
+        trend = "Bullish";
+    } else if (currentPrice < tenkan && currentPrice < kijun) {
+        trend = "Bearish";
     }
-    
-    // Sequential Double Smoothing (EMA of EMA)
-    const emaDiff1 = calculateEMAArray(diffs, smooth);
-    const emaDiff2 = calculateEMAArray(emaDiff1, smooth);
-    
-    const emaRange1 = calculateEMAArray(ranges, smooth);
-    const emaRange2 = calculateEMAArray(emaRange1, smooth);
-    
-    if (emaRange2.length === 0) return 0;
-    
-    const finalDiff = emaDiff2[emaDiff2.length - 1];
-    const finalRange = emaRange2[emaRange2.length - 1];
-    
-    return (finalRange !== 0) ? Math.round((finalDiff / (finalRange / 2)) * 100) : 0;
+
+    // Normalized tracking calculation for sector rotation scoring 
+    const distanceKijun = kijun !== 0 ? ((currentPrice - kijun) / kijun) * 100 : 0;
+
+    return {
+        tenkan: parseFloat(tenkan.toFixed(2)),
+        kijun: parseFloat(kijun.toFixed(2)),
+        trend: trend,
+        distanceKijun: parseFloat(distanceKijun.toFixed(2))
+    };
 }
 
 // --- MAIN DATA ENGINE ---
@@ -122,15 +108,18 @@ async function fetchMarketData(symbols) {
 
                 const changePct = ((last.c - prev.c) / prev.c * 100).toFixed(2);
 
-                // Process the 10-day custom momentum / 5-day normalization window SMI calculations
-                const smiValue = calculateSurgicalSMI(history);
+                // Process the custom Ichimoku calculations
+                const ichi = calculateIchimoku(history);
 
                 results.indices[ticker] = {
                     price: currentPrice.toFixed(2),
                     dailyChange: changePct,
                     change5d: parseFloat(changePct), 
-                    smi: smiValue,
-                    conf: (currentPrice > smaValue && smiValue > 0) ? "UP" : "DOWN",
+                    tenkan: ichi.tenkan,
+                    kijun: ichi.kijun,
+                    trend: ichi.trend,
+                    score: ichi.distanceKijun, // Injected proxy variable for UI rendering blocks
+                    conf: (currentPrice > smaValue && ichi.trend === "Bullish") ? "UP" : "DOWN",
                     valueGap: "N/A",
                     weekHigh: weekHigh.toFixed(2),
                     weekLow: weekLow.toFixed(2),
@@ -167,7 +156,7 @@ async function fetchMarketData(symbols) {
     const sectors = ["XLK", "XLF", "XLV", "XLY"];
     results.moneyFlow = sectors
         .filter(s => results.indices[s])
-        .map(s => ({ ticker: s, score: results.indices[s].smi }))
+        .map(s => ({ ticker: s, score: results.indices[s].score }))
         .sort((a, b) => b.score - a.score);
 
     return results;

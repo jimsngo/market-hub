@@ -16,11 +16,14 @@ async function triggerSync() {
     if (btn) btn.innerText = "Refresh Theatre";
 }
 
-// Unified Tiered Momentum Color Assigner
-function getSmiStyleProperties(val) {
-    const score = parseFloat(val);
-    if (isNaN(score)) return { color: "#ffffff" };
-    return score >= 0 ? { color: "#00ff66" } : { color: "#ff3366" };
+// Dynamic Ichimoku Text/Color Utility Formatter
+function getTrendStatusProperties(trend, isMacroGate = false) {
+    if (trend === "Bullish") {
+        return { text: "BULLISH", color: isMacroGate ? "#ff3366" : "#00ff66" };
+    } else if (trend === "Bearish") {
+        return { text: "BEARISH", color: isMacroGate ? "#00ff66" : "#ff3366" };
+    }
+    return { text: "NEUTRAL", color: "#ffcc00" };
 }
 
 // Style String Return Builder for standard High/Low candle midpoint bars (0-100%)
@@ -30,17 +33,6 @@ function getTosBarStyle(percentage) {
     return pct >= 50 
         ? `left: 50%; width: ${pct - 50}%; background: #007f4e; border-radius: 0 2px 2px 0;`
         : `left: ${pct}%; width: ${50 - pct}%; background: #b9001b; border-radius: 2px 0 0 2px;`;
-}
-
-// Progressive Intensity Gradient Return Builder for SMI tracks (-100 to +100)
-function getSmiBarStyle(scoreValue) {
-    const score = parseFloat(scoreValue);
-    if (isNaN(score)) return '';
-    const smiPct = ((score + 100) / 200) * 100;
-    
-    return score >= 0
-        ? `left: 50%; width: ${smiPct - 50}%; background: linear-gradient(to right, #007f4e, #00ff66); border-radius: 0 2px 2px 0;`
-        : `left: ${smiPct}%; width: ${50 - smiPct}%; background: linear-gradient(to left, #b9001b, #ff3366); border-radius: 2px 0 0 2px;`;
 }
 
 function renderDashboard(data) {
@@ -58,17 +50,15 @@ function renderDashboard(data) {
     const rtyData = data.indices["RTY=F"];
 
     const vixVal = vixData ? parseFloat(vixData.price) : 0;
-    const vixSmi = vixData ? parseFloat(vixData.smi) : 0;
-    const vixAvg = vixData ? parseFloat(vixData.smiAvg) : 0;
     const vixPct = vixData ? parseFloat(vixData.currentPct) : 50;
-    
     const tnxVal = tnxData ? parseFloat(tnxData.price) : 0;
-    const tnxSmi = tnxData ? parseFloat(tnxData.smi) : 0;
 
-    // --- HARDENED REAL-TIME PIVOT ENGINE (NO IFS, ANDS, OR ORS) ---
-    // Rule 1: If VIX > 20, market is bearish, period.
-    // Rule 2: If VIX < 20, look at the 5-day H/L graph. If it's green (> 50%), it is bearish.
-    const isSystemSafeToOperate = (vixVal < 20 && vixPct <= 50);
+    // --- HARDENED ICHIMOKU REGIME GATEWAY ---
+    // Market Favorable ONLY when BOTH VIX and 10Y are structurally trending down (Bearish)
+    const isVixTrendingDown = (vixData && vixData.trend === "Bearish");
+    const isTnxTrendingDown = (tnxData && tnxData.trend === "Bearish");
+    
+    const isSystemSafeToOperate = (isVixTrendingDown && isTnxTrendingDown);
     const isFirewallTripped = !isSystemSafeToOperate;
 
     // 1. DYNAMIC UPDATE FOR GATE 1 VOLATILITY MATRIX
@@ -79,8 +69,8 @@ function renderDashboard(data) {
     const vixH = document.getElementById('vix-lbl-high'); if (vixH && vixData) vixH.innerText = `H: ${vixData.weekHigh}`;
     const vixSmiLabel = document.getElementById('vix-lbl-smi'); 
     if (vixSmiLabel && vixData) {
-        vixSmiLabel.innerText = `SMI: ${vixSmi} / Avg: ${vixAvg}`;
-        vixSmiLabel.style.color = getSmiStyleProperties(vixSmi).color;
+        const vProps = getTrendStatusProperties(vixData.trend, true);
+        vixSmiLabel.innerHTML = `ST POSTURE: <span style="font-size:1.2em; color:${vProps.color}; font-weight:bold;">${vProps.text}</span>`;
     }
 
     // 2. DYNAMIC UPDATE FOR GATE 1 RATE MOMENTUM MATRIX
@@ -91,18 +81,18 @@ function renderDashboard(data) {
     const tnxH = document.getElementById('tnx-lbl-high'); if (tnxH && tnxData) tnxH.innerText = `H: ${tnxData.weekHigh}%`;
     const tnxSmiLabel = document.getElementById('tnx-lbl-smi');
     if (tnxSmiLabel && tnxData) {
-        tnxSmiLabel.innerText = `SMI: ${tnxSmi}`;
-        tnxSmiLabel.style.color = getSmiStyleProperties(tnxSmi).color;
+        const tProps = getTrendStatusProperties(tnxData.trend, true);
+        tnxSmiLabel.innerHTML = `ST POSTURE: <span style="font-size:1.2em; color:${tProps.color}; font-weight:bold;">${tProps.text}</span>`;
     }
 
     // --- 2b. BINARY OPERATIONAL DIRECTIVE BOX OUTPUT ---
     const summaryEl = document.getElementById('gate1-summary-directive');
     if (summaryEl) {
         if (isSystemSafeToOperate) {
-            summaryEl.innerText = "📋 DIRECTIVE: Market Favorable - It's OK to buy High Value Stocks";
+            summaryEl.innerText = "📋 DIRECTIVE: Market Favorable - Core Macro Signals in Markdown Phase";
             summaryEl.style.cssText = "border:1px solid #007f4e; padding:14px; border-radius:6px; font-weight:bold; font-size:0.95em; text-align:center; letter-spacing:0.5px; background:#0a1910; color:#00ff66; box-shadow:0 0 10px rgba(0,255,102,0.15);";
         } else {
-            summaryEl.innerText = "📋 DIRECTIVE: Market Unfavorable - Time to Cash Out or Trim Positions";
+            summaryEl.innerText = "📋 DIRECTIVE: Market Unfavorable - Firewall Locked Down Against System Stress";
             summaryEl.style.cssText = "border:1px solid #b9001b; padding:14px; border-radius:6px; font-weight:bold; font-size:0.95em; text-align:center; letter-spacing:0.5px; background:#1a0d0f; color:#ff3366; box-shadow:0 0 12px rgba(255,51,102,0.2);";
         }
     }
@@ -153,7 +143,7 @@ function renderDashboard(data) {
             const pColor = val.change5d >= 0 ? "#00ffcc" : "#ff3366";
             const lowVal = asset.isMetal ? `${asset.prefix}${val.weekLow}` : `${(parseFloat(val.weekLow) * asset.scale).toFixed(2)}${asset.suffix}`;
             const highVal = asset.isMetal ? `${asset.prefix}${val.weekHigh}` : `${(parseFloat(val.weekHigh) * asset.scale).toFixed(2)}${asset.suffix}`;
-            const textStyles = getSmiStyleProperties(val.smi);
+            const trendStyles = getTrendStatusProperties(val.trend);
             const gapClass = parseFloat(val.valueGap) >= 0 || val.valueGap === "N/A" ? 'gap-pos' : 'gap-neg';
 
             return `
@@ -171,13 +161,10 @@ function renderDashboard(data) {
                         <span style="color:#666;">L: ${lowVal}</span>
                         <span style="color:#666;">H: ${highVal}</span>
                     </div>
-                    <div style="font-size:0.55em; border-top:1px solid #1c1c1c; padding-top:4px; color:#555; display:flex; flex-direction:column; gap:4px;">
-                        <div>
-                            SMI MOMENTUM: <span style="color:${textStyles.color}; font-weight:bold; float:right;">${val.smi}</span>
-                        </div>
-                        <div class="tos-mini-track" style="height: 12px; margin: 0; background: #03070d; border-color: #0e1620;">
-                            <div class="tos-center-axis" style="left: 50%; background: #192535;"></div>
-                            <div class="tos-fill-bar" style="${getSmiBarStyle(val.smi)}"></div>
+                    <div style="font-size:0.55em; border-top:1px solid #1c1c1c; padding-top:6px; color:#555; display:flex; flex-direction:column; gap:4px;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 4px;">
+                            <span>ST POSTURE:</span>
+                            <span style="color:${trendStyles.color}; font-size:1.3em; font-weight:bold;">${trendStyles.text}</span>
                         </div>
                         <div style="margin-top:2px;">
                             Value Gap: <span class="${gapClass}" style="float:right; font-weight:bold;">${val.valueGap}</span>
@@ -198,9 +185,9 @@ function renderDashboard(data) {
 
     if (gate1AlertBox && headlineElement) {
         if (isFirewallTripped) {
-            gate1AlertBox.innerText = `🛑 CRITICAL FIREWALL BREACH: CLOSE POSITIONS / DEFENSIVE CASH LOCK`;
+            gate1AlertBox.innerText = `🛑 CRITICAL FIREWALL BREACH: MACRO STRATA SYSTEM EXPOSURE DETECTED`;
             gate1AlertBox.style.cssText = "color:#ff3366; border-color:#ff3366; background:#1a0d0f; padding:12px; border-radius:6px; font-weight:bold; font-size:0.9em; letter-spacing:1px; text-align:center; margin-bottom:15px; box-shadow: 0 0 10px rgba(255,51,102,0.2);";
-            headlineElement.innerText = "MACRO THREAT ACTIVE: PIVOT SHUTDOWN CALIBRATED. EXTRAORDINARY REGIME ANXIETY DETECTED VIA GRAPH EXTENSION OR LEVEL BREAK.";
+            headlineElement.innerText = "FIREWALL SHUTDOWN CALIBRATED: MACRO INDICATORS RESIST TREND CLEARANCE. ICHIMOKU EQUILIBRIUM FLOORS TRAPPED ABOVE SAFETY LINES.";
         } else if (bearZoneCount >= 2) {
             gate1AlertBox.innerText = `🛑 TACTICAL RISK EXPOSURE ALERT: ${bearZoneCount} CORE INDICES IN BEAR CHANNELS`;
             gate1AlertBox.style.cssText = "color:#ff3366; border-color:#ff3366; background:#1a0d0f; padding:12px; border-radius:6px; font-weight:bold; font-size:0.9em; letter-spacing:1px; text-align:center; margin-bottom:15px;";
@@ -231,7 +218,7 @@ function renderDashboard(data) {
             const gapClass = parseFloat(val.valueGap) >= 0 ? 'gap-pos' : 'gap-neg';
             const priceColorClass = val.change5d >= 0 ? 'gap-pos' : 'gap-neg';
             const cardMomentumClass = val.change5d >= 0 ? 'up' : 'down';
-            const textStyles = getSmiStyleProperties(val.smi);
+            const trendStyles = getTrendStatusProperties(val.trend);
 
             return `
             <div class="card ${cardMomentumClass}">
@@ -250,15 +237,11 @@ function renderDashboard(data) {
                     </div>
                 </div>
                 <div class="metrics" style="font-size:0.65em; margin-top:8px; border-top:1px solid #151515; padding-top:8px;">
-                    <div style="color:#555; margin-bottom:4px; display:flex; justify-content:space-between;">
-                        <span>SMI MOMENTUM:</span>
-                        <span style="color:${textStyles.color}; font-weight:bold;">${val.smi}</span>
+                    <div style="color:#555; margin-bottom:4px; display:flex; justify-content:space-between; align-items:center;">
+                        <span>ST POSTURE:</span>
+                        <span style="color:${trendStyles.color}; font-size:1.3em; font-weight:bold;">${trendStyles.text}</span>
                     </div>
-                    <div class="tos-mini-track" style="height: 12px; margin: 4px 0 6px 0; background: #03070d; border-color: #0e1620;">
-                        <div class="tos-center-axis" style="left: 50%; background: #192535;"></div>
-                        <div class="tos-fill-bar" style="${getSmiBarStyle(val.smi)}"></div>
-                    </div>
-                    <div style="display:flex; justify-content:space-between; margin-top:4px; color:#555;">
+                    <div style="display:flex; justify-content:space-between; margin-top:8px; color:#555;">
                         <span>Value Gap: <span class="${gapClass}">${val.valueGap}</span></span>
                     </div>
                 </div>
@@ -272,19 +255,15 @@ function renderDashboard(data) {
         flowGrid.innerHTML = (data.moneyFlow || []).map((s, i) => {
             const sectorData = data.indices[s.ticker];
             const flowBarClass = (sectorData && sectorData.change5d >= 0) ? 'flow-up' : 'flow-down';
-            const textStyles = getSmiStyleProperties(s.score);
+            const trendStyles = getTrendStatusProperties(sectorData ? sectorData.trend : "Neutral");
 
             return `
             <div class="flow-card ${flowBarClass} ${i === 0 ? 'leader' : ''}">
                 <div style="display:flex; justify-content:space-between; align-items:center; font-weight:bold; color:#888; margin-bottom:5px;">
                     <span>${s.ticker}</span>
-                    <span style="color:${textStyles.color}; font-size:1.1em;">${s.score}</span>
+                    <span style="color:${trendStyles.color}; font-size:1.3em;">${trendStyles.text}</span>
                 </div>
-                <div class="tos-mini-track" style="height: 12px; margin: 4px 0; background: #03070d; border-color: #0e1620;">
-                    <div class="tos-center-axis" style="left: 50%; background: #192535;"></div>
-                    <div class="tos-fill-bar" style="${getSmiBarStyle(s.score)}"></div>
-                </div>
-                <div style="font-size:0.6em; color:#444; letter-spacing:1px; text-align:center; font-weight:bold;">SMI MOMENTUM FLOW</div>
+                <div style="font-size:0.6em; color:#444; letter-spacing:1px; text-align:center; font-weight:bold; margin-top:10px;">ST POSTURE FLOW</div>
             </div>`;
         }).join('');
     }
