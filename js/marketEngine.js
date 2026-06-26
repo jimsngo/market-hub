@@ -10,31 +10,49 @@ const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
 // --- SURGICAL INDICATOR HELPERS ---
 
-// Standard Technical Ichimoku (9, 26) Equilibrium Midpoint Engine
+// Upgraded Technical Ichimoku Engine incorporating 26-Period Forward Displaced Cloud
 function calculateIchimoku(history) {
-    // Safety drop if there isn't enough historical depth to compute the Kijun baseline
-    if (history.length < 26) return { tenkan: 0, kijun: 0, trend: "Neutral", distanceKijun: 0 };
+    const N = history.length;
+    // Requires a minimum of 78 bars to compute a 52-period Span B lookback from 26 days ago
+    if (N < 78) return { tenkan: 0, kijun: 0, trend: "Neutral", cloud: "Inside", distanceKijun: 0 };
 
-    const slice9 = history.slice(-9);   // Calibrated to standard 9-period lookback
-    const slice26 = history.slice(-26); // Calibrated to standard 26-period lookback
-    const currentPrice = history[history.length - 1].c;
+    // 1. TODAY'S EQUILIBRIUM VALUES
+    const slice9_today = history.slice(-9);   // Standard 9-period lookback
+    const slice26_today = history.slice(-26); // Standard 26-period lookback
+    const currentPrice = history[N - 1].c;
 
-    // Tenkan-Sen (9-period midpoint)
-    const high9 = Math.max(...slice9.map(d => d.h));
-    const low9 = Math.min(...slice9.map(d => d.l));
-    const tenkan = (high9 + low9) / 2;
+    const tenkan = (Math.max(...slice9_today.map(d => d.h)) + Math.min(...slice9_today.map(d => d.l))) / 2;
+    const kijun = (Math.max(...slice26_today.map(d => d.h)) + Math.min(...slice26_today.map(d => d.l))) / 2;
 
-    // Kijun-Sen (26-period midpoint)
-    const high26 = Math.max(...slice26.map(d => d.h));
-    const low26 = Math.min(...slice26.map(d => d.l));
-    const kijun = (high26 + low26) / 2;
+    // 2. CORRECTION: 26-BAR HISTORICAL OFFSET FOR TODAY'S CLOUD BOUNDARIES
+    const targetIdx = N - 1 - 26;
 
-    // Establish pure structural posture status
+    // Span A (Displaced 26 bars forward to represent today's floor): (Tenkan @ target + Kijun @ target) / 2
+    const slice9_target = history.slice(targetIdx - 8, targetIdx + 1);
+    const slice26_target = history.slice(targetIdx - 25, targetIdx + 1);
+
+    const tenkan_target = (Math.max(...slice9_target.map(d => d.h)) + Math.min(...slice9_target.map(d => d.l))) / 2;
+    const kijun_target = (Math.max(...slice26_target.map(d => d.h)) + Math.min(...slice26_target.map(d => d.l))) / 2;
+    const spanA = (tenkan_target + kijun_target) / 2;
+
+    // Span B (Displaced 26 bars forward to represent today's ceiling): 52-period midpoint ending at targetIdx
+    const slice52_target = history.slice(targetIdx - 51, targetIdx + 1);
+    const spanB = (Math.max(...slice52_target.map(d => d.h)) + Math.min(...slice52_target.map(d => d.l))) / 2;
+
+    // Short-Term Posture Status
     let trend = "Neutral";
     if (currentPrice > tenkan && currentPrice > kijun) {
         trend = "Bullish";
     } else if (currentPrice < tenkan && currentPrice < kijun) {
         trend = "Bearish";
+    }
+
+    // Long-Term Kumo Cloud Position Status (Synced with thinkorswim ground truth)
+    let cloud = "Inside";
+    if (currentPrice > spanA && currentPrice > spanB) {
+        cloud = "Above";
+    } else if (currentPrice < spanA && currentPrice < spanB) {
+        cloud = "Below";
     }
 
     // Normalized tracking calculation for sector rotation scoring 
@@ -44,6 +62,7 @@ function calculateIchimoku(history) {
         tenkan: parseFloat(tenkan.toFixed(2)),
         kijun: parseFloat(kijun.toFixed(2)),
         trend: trend,
+        cloud: cloud,
         distanceKijun: parseFloat(distanceKijun.toFixed(2))
     };
 }
@@ -57,12 +76,11 @@ async function fetchMarketData(symbols) {
         try {
             await sleep(150); // Proxy firewall safety pacing
 
-            // Interval calibrated to daily 1d frequency lookbacks
-            const targetUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${sym}?interval=1d&range=3mo`;
+            // OPTIMIZATION: Extended lookback range from 3mo to 6mo to capture deep historical cloud data
+            const targetUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${sym}?interval=1d&range=6mo`;
             let response, raw;
 
             try {
-                // Try Primary Attempt: Google Apps Script Proxy
                 response = await fetch(PROXY + encodeURIComponent(targetUrl), {
                     method: 'GET',
                     redirect: 'follow'
@@ -70,8 +88,6 @@ async function fetchMarketData(symbols) {
                 raw = await response.json();
             } catch (primaryError) {
                 console.warn(`Primary proxy failed for ${sym}. Triggering backup router...`);
-                
-                // Fallback Attempt: Public open CORS router line
                 response = await fetch(BACKUP_PROXY + encodeURIComponent(targetUrl));
                 const wrappedData = await response.json();
                 raw = JSON.parse(wrappedData.contents);
@@ -86,19 +102,16 @@ async function fetchMarketData(symbols) {
                     c: ind.close[i], h: ind.high[i], l: ind.low[i]
                 })).filter(d => d.c !== null && d.h !== null && d.l !== null);
 
-                // Isolate current active daily bars
                 const last = history[history.length - 1]; 
                 const prev = history[history.length - 2]; 
                 const smaValue = history.reduce((acc, val) => acc + val.c, 0) / history.length;
                 
                 const currentPrice = last.c;
                 
-                // Track current rolling 5-day window boundaries instead of fixed weekly frames
                 const last5Days = history.slice(-5);
                 const weekHigh = Math.max(...last5Days.map(d => d.h));
                 const weekLow = Math.min(...last5Days.map(d => d.l));
                 
-                // Calculate tracking location relative to running High/Low parameters
                 let currentPct = 50;
                 const weekRange = weekHigh - weekLow;
                 if (weekRange > 0) {
@@ -108,7 +121,6 @@ async function fetchMarketData(symbols) {
 
                 const changePct = ((last.c - prev.c) / prev.c * 100).toFixed(2);
 
-                // Process the custom Ichimoku calculations
                 const ichi = calculateIchimoku(history);
 
                 results.indices[ticker] = {
@@ -118,7 +130,8 @@ async function fetchMarketData(symbols) {
                     tenkan: ichi.tenkan,
                     kijun: ichi.kijun,
                     trend: ichi.trend,
-                    score: ichi.distanceKijun, // Injected proxy variable for UI rendering blocks
+                    cloud: ichi.cloud, // INJECTED TO REPAIR UI ALIGNMENT GAP
+                    score: ichi.distanceKijun, 
                     conf: (currentPrice > smaValue && ichi.trend === "Bullish") ? "UP" : "DOWN",
                     valueGap: "N/A",
                     weekHigh: weekHigh.toFixed(2),
@@ -143,7 +156,6 @@ async function fetchMarketData(symbols) {
         }
     });
 
-    // Handle precious metals value gaps manually against 2-Yr yield parity
     if (results.indices["GLD"] && results.yield > 0) {
         const gldEarningsYield = (100 / 22.5); 
         results.indices["GLD"].valueGap = (gldEarningsYield - results.yield * 0.93).toFixed(2) + "%";
@@ -153,7 +165,8 @@ async function fetchMarketData(symbols) {
         results.indices["SLV"].valueGap = (slvEarningsYield - results.yield * 0.93).toFixed(2) + "%";
     }
 
-    const sectors = ["XLK", "XLF", "XLV", "XLY"];
+    // EXPANDED SCORING MATRIX: Evaluates all 11 core sectors for money flow rankings
+    const sectors = ["XLC", "XLY", "XLP", "XLE", "XLF", "XLV", "XLI", "XLK", "XLB", "XLRE", "XLU"];
     results.moneyFlow = sectors
         .filter(s => results.indices[s])
         .map(s => ({ ticker: s, score: results.indices[s].score }))

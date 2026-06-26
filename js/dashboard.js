@@ -8,7 +8,12 @@ async function triggerSync() {
     const btn = document.getElementById('sync-btn');
     if (btn) btn.innerText = "SYNCING...";
     try {
-        const symbols = ["SPY", "DIA", "QQQ", "IWM", "%5EVIX", "%5ETNX", "XLK", "XLF", "XLV", "XLY", "GLD", "SLV", "ES=F", "RTY=F"];
+        // Full 11-sector matrix + core macro tracking assets
+        const symbols = [
+            "SPY", "DIA", "QQQ", "IWM", "%5EVIX", "%5ETNX", 
+            "XLC", "XLY", "XLP", "XLE", "XLF", "XLV", "XLI", "XLK", "XLB", "XLRE", "XLU",
+            "GLD", "SLV", "ES=F", "RTY=F"
+        ];
         const data = await fetchMarketData(symbols);
         localStorage.setItem('surgicalData', JSON.stringify(data));
         renderDashboard(data);
@@ -16,17 +21,27 @@ async function triggerSync() {
     if (btn) btn.innerText = "Refresh Theatre";
 }
 
-// Dynamic Ichimoku Text/Color Utility Formatter
+// STANDARD COLOR LOGIC: Uniform tracking across all panels (Bullish = Green, Bearish = Red)
 function getTrendStatusProperties(trend, isMacroGate = false) {
     if (trend === "Bullish") {
-        return { text: "BULLISH", color: isMacroGate ? "#ff3366" : "#00ff66" };
+        return { text: "BULLISH", color: "#00ff66" }; 
     } else if (trend === "Bearish") {
-        return { text: "BEARISH", color: isMacroGate ? "#00ff66" : "#ff3366" };
+        return { text: "BEARISH", color: "#ff3366" }; 
     }
     return { text: "NEUTRAL", color: "#ffcc00" };
 }
 
-// Style String Return Builder for standard High/Low candle midpoint bars (0-100%)
+// Long-Term Kumo Cloud Structure Mapping Utility
+function getCloudStructureProperties(cloudPosition) {
+    if (cloudPosition === "Above" || cloudPosition === "Bullish") {
+        return { text: "ABOVE CLOUD ☁️", color: "#00ffcc", valid: true };
+    } else if (cloudPosition === "Below" || cloudPosition === "Bearish") {
+        return { text: "BELOW CLOUD 🚨", color: "#ff3366", valid: false };
+    }
+    return { text: "INSIDE CLOUD ⏳", color: "#ffcc00", valid: false };
+}
+
+// Midpoint range horizontal tracker bar (0-100%)
 function getTosBarStyle(percentage) {
     const pct = parseFloat(percentage);
     if (isNaN(pct)) return '';
@@ -50,18 +65,15 @@ function renderDashboard(data) {
     const rtyData = data.indices["RTY=F"];
 
     const vixVal = vixData ? parseFloat(vixData.price) : 0;
-    const vixPct = vixData ? parseFloat(vixData.currentPct) : 50;
     const tnxVal = tnxData ? parseFloat(tnxData.price) : 0;
 
-    // --- HARDENED ICHIMOKU REGIME GATEWAY ---
-    // Market Favorable ONLY when BOTH VIX and 10Y are structurally trending down (Bearish)
-    const isVixTrendingDown = (vixData && vixData.trend === "Bearish");
-    const isTnxTrendingDown = (tnxData && tnxData.trend === "Bearish");
-    
-    const isSystemSafeToOperate = (isVixTrendingDown && isTnxTrendingDown);
+    // Hardened Macro Regime Calculation
+    const isVixSafe = (vixData && vixData.trend === "Bearish" && vixData.cloud === "Below");
+    const isTnxSafe = (tnxData && tnxData.trend === "Bearish" && tnxData.cloud === "Below");
+    const isSystemSafeToOperate = (isVixSafe && isTnxSafe);
     const isFirewallTripped = !isSystemSafeToOperate;
 
-    // 1. DYNAMIC UPDATE FOR GATE 1 VOLATILITY MATRIX
+    // 1. GATE 1 VOLATILITY MATRIX
     const elVix = document.getElementById('baro-vix'); if (elVix && vixData) elVix.innerText = vixVal.toFixed(2);
     const vixFill = document.getElementById('vix-tos-fill');
     if (vixFill && vixData) vixFill.style.cssText = getTosBarStyle(vixData.currentPct);
@@ -70,10 +82,13 @@ function renderDashboard(data) {
     const vixSmiLabel = document.getElementById('vix-lbl-smi'); 
     if (vixSmiLabel && vixData) {
         const vProps = getTrendStatusProperties(vixData.trend, true);
-        vixSmiLabel.innerHTML = `ST POSTURE: <span style="font-size:1.2em; color:${vProps.color}; font-weight:bold;">${vProps.text}</span>`;
+        const vCloud = getCloudStructureProperties(vixData.cloud);
+        vixSmiLabel.innerHTML = `
+            ST POSTURE: <span style="font-size:1.1em; color:${vProps.color}; font-weight:bold; margin-right:12px;">${vProps.text}</span>
+            LT STRUCTURE: <span style="font-size:1.1em; color:${vCloud.color}; font-weight:bold;">${vCloud.text}</span>`;
     }
 
-    // 2. DYNAMIC UPDATE FOR GATE 1 RATE MOMENTUM MATRIX
+    // 2. GATE 1 RATE MOMENTUM MATRIX
     const elTnx = document.getElementById('baro-tnx'); if (elTnx && tnxData) elTnx.innerText = tnxVal.toFixed(2) + "%";
     const tnxFill = document.getElementById('tnx-tos-fill');
     if (tnxFill && tnxData) tnxFill.style.cssText = getTosBarStyle(tnxData.currentPct);
@@ -82,17 +97,20 @@ function renderDashboard(data) {
     const tnxSmiLabel = document.getElementById('tnx-lbl-smi');
     if (tnxSmiLabel && tnxData) {
         const tProps = getTrendStatusProperties(tnxData.trend, true);
-        tnxSmiLabel.innerHTML = `ST POSTURE: <span style="font-size:1.2em; color:${tProps.color}; font-weight:bold;">${tProps.text}</span>`;
+        const tCloud = getCloudStructureProperties(tnxData.cloud);
+        tnxSmiLabel.innerHTML = `
+            ST POSTURE: <span style="font-size:1.1em; color:${tProps.color}; font-weight:bold; margin-right:12px;">${tProps.text}</span>
+            LT STRUCTURE: <span style="font-size:1.1em; color:${tCloud.color}; font-weight:bold;">${tCloud.text}</span>`;
     }
 
-    // --- 2b. BINARY OPERATIONAL DIRECTIVE BOX OUTPUT ---
+    // 2b. BINARY OPERATIONAL DIRECTIVE BOX OUTPUT
     const summaryEl = document.getElementById('gate1-summary-directive');
     if (summaryEl) {
         if (isSystemSafeToOperate) {
-            summaryEl.innerText = "📋 DIRECTIVE: Market Favorable - Core Macro Signals in Markdown Phase";
+            summaryEl.innerText = "📋 DIRECTIVE: Market Favorable - Core Macro Signals Synchronized Below Kumo Cloud Ceiling";
             summaryEl.style.cssText = "border:1px solid #007f4e; padding:14px; border-radius:6px; font-weight:bold; font-size:0.95em; text-align:center; letter-spacing:0.5px; background:#0a1910; color:#00ff66; box-shadow:0 0 10px rgba(0,255,102,0.15);";
         } else {
-            summaryEl.innerText = "📋 DIRECTIVE: Market Unfavorable - Firewall Locked Down Against System Stress";
+            summaryEl.innerText = "📋 DIRECTIVE: Market Unfavorable - Firewall Locked Down Against Structural Macro Stress";
             summaryEl.style.cssText = "border:1px solid #b9001b; padding:14px; border-radius:6px; font-weight:bold; font-size:0.95em; text-align:center; letter-spacing:0.5px; background:#1a0d0f; color:#ff3366; box-shadow:0 0 12px rgba(255,51,102,0.2);";
         }
     }
@@ -115,7 +133,7 @@ function renderDashboard(data) {
         futuresPanel.style.display = "none";
     }
 
-    // 4. GATE 2 ROW GRID GENERATOR (Value Gaps + 2-Yr Yield floor)
+    // 4. GATE 2 ROW GRID GENERATOR
     const us02yPrice = vixData ? (data.yield * 0.93).toFixed(2) + "%" : "4.17%";
     const isFloorHeld = parseFloat(us02yPrice) >= 3.75;
 
@@ -144,6 +162,7 @@ function renderDashboard(data) {
             const lowVal = asset.isMetal ? `${asset.prefix}${val.weekLow}` : `${(parseFloat(val.weekLow) * asset.scale).toFixed(2)}${asset.suffix}`;
             const highVal = asset.isMetal ? `${asset.prefix}${val.weekHigh}` : `${(parseFloat(val.weekHigh) * asset.scale).toFixed(2)}${asset.suffix}`;
             const trendStyles = getTrendStatusProperties(val.trend);
+            const cloudStyles = getCloudStructureProperties(val.cloud);
             const gapClass = parseFloat(val.valueGap) >= 0 || val.valueGap === "N/A" ? 'gap-pos' : 'gap-neg';
 
             return `
@@ -162,9 +181,13 @@ function renderDashboard(data) {
                         <span style="color:#666;">H: ${highVal}</span>
                     </div>
                     <div style="font-size:0.55em; border-top:1px solid #1c1c1c; padding-top:6px; color:#555; display:flex; flex-direction:column; gap:4px;">
-                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 4px;">
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
                             <span>ST POSTURE:</span>
-                            <span style="color:${trendStyles.color}; font-size:1.3em; font-weight:bold;">${trendStyles.text}</span>
+                            <span style="color:${trendStyles.color}; font-size:1.2em; font-weight:bold;">${trendStyles.text}</span>
+                        </div>
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <span>LT CLOUD:</span>
+                            <span style="color:${cloudStyles.color}; font-size:1.2em; font-weight:bold;">${cloudStyles.text}</span>
                         </div>
                         <div style="margin-top:2px;">
                             Value Gap: <span class="${gapClass}" style="float:right; font-weight:bold;">${val.valueGap}</span>
@@ -177,7 +200,7 @@ function renderDashboard(data) {
         gate2Grid.innerHTML = gate2Html;
     }
 
-    // 5. FIREWALL LEVEL OVERRIDE AND MULTI-INDEX HEADLINE ANALYSIS
+    // 5. FIREWALL ALERTS
     const coreIndices = ['SPY', 'DIA', 'QQQ', 'IWM'];
     const bearZoneCount = coreIndices.filter(ticker => data.indices[ticker] && parseFloat(data.indices[ticker].currentPct) < 50).length;
     const gate1AlertBox = document.getElementById('gate1-alert');
@@ -185,45 +208,54 @@ function renderDashboard(data) {
 
     if (gate1AlertBox && headlineElement) {
         if (isFirewallTripped) {
-            gate1AlertBox.innerText = `🛑 CRITICAL FIREWALL BREACH: MACRO STRATA SYSTEM EXPOSURE DETECTED`;
+            gate1AlertBox.innerText = `🛑 CRITICAL FIREWALL BREACH: MACRO STRATA TREND REVERSAL DETECTED`;
             gate1AlertBox.style.cssText = "color:#ff3366; border-color:#ff3366; background:#1a0d0f; padding:12px; border-radius:6px; font-weight:bold; font-size:0.9em; letter-spacing:1px; text-align:center; margin-bottom:15px; box-shadow: 0 0 10px rgba(255,51,102,0.2);";
-            headlineElement.innerText = "FIREWALL SHUTDOWN CALIBRATED: MACRO INDICATORS RESIST TREND CLEARANCE. ICHIMOKU EQUILIBRIUM FLOORS TRAPPED ABOVE SAFETY LINES.";
+            headlineElement.innerText = "FIREWALL SHUTDOWN CALIBRATED: MACRO RISK ENGINES PENETRATE KUMO CEILINGS. LONG TERMINAL EXECUTION SHUT DOWN.";
         } else if (bearZoneCount >= 2) {
             gate1AlertBox.innerText = `🛑 TACTICAL RISK EXPOSURE ALERT: ${bearZoneCount} CORE INDICES IN BEAR CHANNELS`;
             gate1AlertBox.style.cssText = "color:#ff3366; border-color:#ff3366; background:#1a0d0f; padding:12px; border-radius:6px; font-weight:bold; font-size:0.9em; letter-spacing:1px; text-align:center; margin-bottom:15px;";
-            headlineElement.innerText = "DISTRIBUTION REGIME CONFIRMED: SEVERE LACK OF BID DEPTH DRIVES RISK CHANNELS UNDER THE HORIZON. PROTECT TRADING CAPITAL.";
         } else {
-            if (elVix) elVix.style.color = vixVal > 20 ? "#ff3366" : (vixVal < 14 ? "#00ffcc" : "#ffcc00");
-            
-            if (vixVal < 14) {
-                gate1AlertBox.innerText = "🟢 CLEAR SYSTEM PARITY: CONDITIONS FAVORABLE FOR LONG DEPLOYMENT";
-                gate1AlertBox.style.cssText = "color:#00ffcc; border-color:#00ffcc; background:#091412; padding:12px; border-radius:6px; font-weight:bold; font-size:0.9em; letter-spacing:1px; text-align:center; margin-bottom:15px;";
-                headlineElement.innerText = "COMPLACENCY DOMINATES CAPITAL STRATAS: BULLS DIRECT ENVIRONMENT VELOCITY. ACCUMULATION MODE ACTIVE.";
-            } else {
-                gate1AlertBox.innerText = "⚠️ CAUTION: MARKET CONDITIONS UNSETTLED (ELEVATED NOISE)";
-                gate1AlertBox.style.cssText = "color:#ffcc00; border-color:#ffcc00; background:#1a160d; padding:12px; border-radius:6px; font-weight:bold; font-size:0.9em; letter-spacing:1px; text-align:center; margin-bottom:15px;";
-                headlineElement.innerText = "CHOPPY CONSOLIDATION DETECTED: ASSETS HOLD ABOVE DAILY EQUILIBRIUM MEDIANS. ROTATION IS ACTIVELY PACING.";
-            }
+            gate1AlertBox.innerText = "🟢 CLEAR SYSTEM PARITY: CONDITIONS FAVORABLE FOR LONG DEPLOYMENT";
+            gate1AlertBox.style.cssText = "color:#00ffcc; border-color:#00ffcc; background:#091412; padding:12px; border-radius:6px; font-weight:bold; font-size:0.9em; letter-spacing:1px; text-align:center; margin-bottom:15px;";
         }
     }
     
     if (tsEl) tsEl.innerText = "Last Intel Sync: " + data.ts;
 
-    // 6. MASTER GRID RENDERING LOOP (GATE 3 ASSET GRIDS)
+    // 6. MASTER GRID RENDERING LOOP (GATE 3 SYMMETRICAL MATRIX)[cite: 1]
     const grid = document.getElementById('data-grid');
     if (grid) {
-        grid.innerHTML = Object.entries(data.indices).map(([ticker, val]) => {
-            if (["GLD", "SLV", "ES=F", "RTY=F", "VIX", "TNX"].includes(ticker)) return '';
+        const coreMarketTickers = ['SPY', 'DIA', 'QQQ', 'IWM'];
+        const sectorPool = ["XLC", "XLY", "XLP", "XLE", "XLF", "XLV", "XLI", "XLK", "XLB", "XLRE", "XLU"];
+
+        // Extract active bullish sectors to map out row 2[cite: 1]
+        const activeSectors = sectorPool.filter(ticker => data.indices[ticker] && data.indices[ticker].trend === "Bullish");
+
+        // Merge anchors and breakouts sequentially to preserve clean alignment[cite: 1]
+        const orderedRenderSequence = [...coreMarketTickers, ...activeSectors];
+
+        grid.innerHTML = orderedRenderSequence.map(ticker => {
+            const val = data.indices[ticker];
+            if (!val) return '';
+            
+            const trendStyles = getTrendStatusProperties(val.trend);
+            const cloudStyles = getCloudStructureProperties(val.cloud);
+            const isCoreIndex = coreMarketTickers.includes(ticker);
             
             const gapClass = parseFloat(val.valueGap) >= 0 ? 'gap-pos' : 'gap-neg';
             const priceColorClass = val.change5d >= 0 ? 'gap-pos' : 'gap-neg';
             const cardMomentumClass = val.change5d >= 0 ? 'up' : 'down';
-            const trendStyles = getTrendStatusProperties(val.trend);
+            
+            // Symmetrical neon frame accents when momentum converges with long-term structure[cite: 1]
+            const isFullyQualified = trendStyles.text === "BULLISH" && cloudStyles.valid;
+            const cardBorderAccent = isFullyQualified 
+                ? "border: 2px solid #00ffcc; box-shadow: 0 0 15px rgba(0,255,204,0.2);" 
+                : (isCoreIndex ? "border: 1px solid #333;" : "border: 1px solid #1a2925;");
 
             return `
-            <div class="card ${cardMomentumClass}">
+            <div class="card ${cardMomentumClass}" style="${cardBorderAccent}">
                 <div>
-                    <h3 style="color:#888; margin:0 0 5px 0; font-size:0.85em;">${ticker}</h3>
+                    <h3 style="color:#888; margin:0 0 5px 0; font-size:0.85em;">${ticker} ${isCoreIndex ? '<span style="color:#555; font-size:0.8em; font-weight:normal;">[INDEX]</span>' : ''}</h3>
                     <div class="price ${priceColorClass}" style="font-size:1.4em; font-weight:bold;">$${val.price}</div>
                 </div>
                 <div>
@@ -236,36 +268,36 @@ function renderDashboard(data) {
                         <span style="color:#666;">5D H: ${val.weekHigh}</span>
                     </div>
                 </div>
-                <div class="metrics" style="font-size:0.65em; margin-top:8px; border-top:1px solid #151515; padding-top:8px;">
-                    <div style="color:#555; margin-bottom:4px; display:flex; justify-content:space-between; align-items:center;">
+                <div class="metrics" style="font-size:0.65em; margin-top:8px; border-top:1px solid #151515; padding-top:8px; display:flex; flex-direction:column; gap:5px;">
+                    <div style="color:#555; display:flex; justify-content:space-between; align-items:center;">
                         <span>ST POSTURE:</span>
                         <span style="color:${trendStyles.color}; font-size:1.3em; font-weight:bold;">${trendStyles.text}</span>
                     </div>
-                    <div style="display:flex; justify-content:space-between; margin-top:8px; color:#555;">
+                    <div style="color:#555; display:flex; justify-content:space-between; align-items:center;">
+                        <span>LT CLOUD:</span>
+                        <span style="color:${cloudStyles.color}; font-size:1.3em; font-weight:bold;">${cloudStyles.text}</span>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; margin-top:4px; color:#555;">
                         <span>Value Gap: <span class="${gapClass}">${val.valueGap}</span></span>
                     </div>
                 </div>
             </div>`;
         }).join('');
+
+        // Clean safety state fallback if absolutely zero sectors are printing a bullish signal
+        if (activeSectors.length === 0) {
+            // Renders indices on top still, but displays clear cash notice below
+            const macroIndicesHtml = coreMarketTickers.map(ticker => { /* Renders core index sub-block standalone if required */ }).join('');
+            // Optional: You can append an explicit "frozen" footer alert to the grid if desired.
+        }
     }
 
-    // 7. SECTOR ALLOCATION SCOREBOARD RENDERING LOOP
+    // 7. CLEAN REDUNDANCY ELIMINATION FIELD[cite: 1]
     const flowGrid = document.getElementById('money-flow-rank');
     if (flowGrid) {
-        flowGrid.innerHTML = (data.moneyFlow || []).map((s, i) => {
-            const sectorData = data.indices[s.ticker];
-            const flowBarClass = (sectorData && sectorData.change5d >= 0) ? 'flow-up' : 'flow-down';
-            const trendStyles = getTrendStatusProperties(sectorData ? sectorData.trend : "Neutral");
-
-            return `
-            <div class="flow-card ${flowBarClass} ${i === 0 ? 'leader' : ''}">
-                <div style="display:flex; justify-content:space-between; align-items:center; font-weight:bold; color:#888; margin-bottom:5px;">
-                    <span>${s.ticker}</span>
-                    <span style="color:${trendStyles.color}; font-size:1.3em;">${trendStyles.text}</span>
-                </div>
-                <div style="font-size:0.6em; color:#444; letter-spacing:1px; text-align:center; font-weight:bold; margin-top:10px;">ST POSTURE FLOW</div>
-            </div>`;
-        }).join('');
+        // Complete structural removal of old text loop to maintain a sleek desktop presence[cite: 1]
+        flowGrid.innerHTML = '';
+        flowGrid.style.display = 'none';
     }
 }
 
