@@ -8,7 +8,6 @@ async function triggerSync() {
     const btn = document.getElementById('sync-btn');
     if (btn) btn.innerText = "SYNCING...";
     try {
-        // Full 11-sector matrix + core macro tracking assets
         const symbols = [
             "SPY", "DIA", "QQQ", "IWM", "%5EVIX", "%5ETNX", 
             "XLC", "XLY", "XLP", "XLE", "XLF", "XLV", "XLI", "XLK", "XLB", "XLRE", "XLU",
@@ -21,27 +20,18 @@ async function triggerSync() {
     if (btn) btn.innerText = "Refresh Theatre";
 }
 
-// STANDARD COLOR LOGIC: Uniform tracking across all panels (Bullish = Green, Bearish = Red)
 function getTrendStatusProperties(trend, isMacroGate = false) {
-    if (trend === "Bullish") {
-        return { text: "BULLISH", color: "#00ff66" }; 
-    } else if (trend === "Bearish") {
-        return { text: "BEARISH", color: "#ff3366" }; 
-    }
+    if (trend === "Bullish") return { text: "BULLISH", color: "#00ff66" }; 
+    if (trend === "Bearish") return { text: "BEARISH", color: "#ff3366" }; 
     return { text: "NEUTRAL", color: "#ffcc00" };
 }
 
-// Long-Term Kumo Cloud Structure Mapping Utility
 function getCloudStructureProperties(cloudPosition) {
-    if (cloudPosition === "Above" || cloudPosition === "Bullish") {
-        return { text: "ABOVE CLOUD ☁️", color: "#00ffcc", valid: true };
-    } else if (cloudPosition === "Below" || cloudPosition === "Bearish") {
-        return { text: "BELOW CLOUD 🚨", color: "#ff3366", valid: false };
-    }
+    if (cloudPosition === "Above" || cloudPosition === "Bullish") return { text: "ABOVE CLOUD ☁️", color: "#00ffcc", valid: true };
+    if (cloudPosition === "Below" || cloudPosition === "Bearish") return { text: "BELOW CLOUD 🚨", color: "#ff3366", valid: false };
     return { text: "INSIDE CLOUD ⏳", color: "#ffcc00", valid: false };
 }
 
-// Midpoint range horizontal tracker bar (0-100%)
 function getTosBarStyle(percentage) {
     const pct = parseFloat(percentage);
     if (isNaN(pct)) return '';
@@ -64,58 +54,88 @@ function renderDashboard(data) {
     const esData = data.indices["ES=F"];
     const rtyData = data.indices["RTY=F"];
 
-    const vixVal = vixData ? parseFloat(vixData.price) : 0;
-    const tnxVal = tnxData ? parseFloat(tnxData.price) : 0;
-
-    // Hardened Macro Regime Calculation
-    const isVixSafe = (vixData && vixData.trend === "Bearish" && vixData.cloud === "Below");
-    const isTnxSafe = (tnxData && tnxData.trend === "Bearish" && tnxData.cloud === "Below");
+    // SYSTEM SAFETY CONFIGURATION: Clear runway mapped entirely to Bearish short-term trends for BOTH VIX & TNX
+    const isVixSafe = (vixData && vixData.trend === "Bearish");
+    const isTnxSafe = (tnxData && tnxData.trend === "Bearish");
     const isSystemSafeToOperate = (isVixSafe && isTnxSafe);
     const isFirewallTripped = !isSystemSafeToOperate;
 
-    // 1. GATE 1 VOLATILITY MATRIX
-    const elVix = document.getElementById('baro-vix'); if (elVix && vixData) elVix.innerText = vixVal.toFixed(2);
-    const vixFill = document.getElementById('vix-tos-fill');
-    if (vixFill && vixData) vixFill.style.cssText = getTosBarStyle(vixData.currentPct);
-    const vixL = document.getElementById('vix-lbl-low'); if (vixL && vixData) vixL.innerText = `L: ${vixData.weekLow}`;
-    const vixH = document.getElementById('vix-lbl-high'); if (vixH && vixData) vixH.innerText = `H: ${vixData.weekHigh}`;
-    const vixSmiLabel = document.getElementById('vix-lbl-smi'); 
-    if (vixSmiLabel && vixData) {
-        const vProps = getTrendStatusProperties(vixData.trend, true);
-        const vCloud = getCloudStructureProperties(vixData.cloud);
-        vixSmiLabel.innerHTML = `
-            ST POSTURE: <span style="font-size:1.1em; color:${vProps.color}; font-weight:bold; margin-right:12px;">${vProps.text}</span>
-            LT STRUCTURE: <span style="font-size:1.1em; color:${vCloud.color}; font-weight:bold;">${vCloud.text}</span>`;
+    // 1 & 2. RENDER GATE 1 MACRO CARDS
+    const gate1MacroGrid = document.getElementById('gate1-macro-grid');
+    if (gate1MacroGrid) {
+        const macroConfig = [
+            { ticker: "VIX", name: "CBOE Volatility Index", suffix: "" },
+            { ticker: "TNX", name: "10Y Treasury Yield", suffix: "%" }
+        ];
+
+        gate1MacroGrid.innerHTML = macroConfig.map(item => {
+            const val = data.indices[item.ticker];
+            if (!val) return '';
+
+            const trendStyles = getTrendStatusProperties(val.trend);
+            const cloudStyles = getCloudStructureProperties(val.cloud);
+            const gapClass = parseFloat(val.valueGap) >= 0 ? 'gap-pos' : 'gap-neg';
+            const priceColorClass = val.change5d >= 0 ? 'gap-pos' : 'gap-neg';
+            const cardMomentumClass = val.change5d >= 0 ? 'up' : 'down';
+            
+            // INTUITIVE RISK COLOR-CODING: Bearish trend means threat reduction (Green), Bullish means breach (Red)
+            const ageColor = val.trend === "Bearish" ? "#00ff66" : "#ff3366";
+
+            return `
+            <div class="card ${cardMomentumClass}" style="border: 1px solid #333;">
+                <div>
+                    <h3 style="color:#aaa; margin:0 0 5px 0; font-size:0.85em; letter-spacing:0.5px;">${item.ticker} <span style="font-size:0.75em; color:#666; font-weight:normal;">(${item.name})</span></h3>
+                    <div class="price ${priceColorClass}" style="font-size:1.4em; font-weight:bold;">${val.price}${item.suffix}</div>
+                </div>
+                <div>
+                    <div class="tos-mini-track" style="height: 12px;">
+                        <div class="tos-center-axis" style="left: 50%;"></div>
+                        <div class="tos-fill-bar" style="${getTosBarStyle(val.currentPct)}"></div>
+                    </div>
+                    <div class="tos-labels" style="margin-bottom: 6px;">
+                        <span style="color:#666;">5D L: ${val.weekLow}${item.suffix}</span>
+                        <span style="color:#666;">5D H: ${val.weekHigh}${item.suffix}</span>
+                    </div>
+                </div>
+                <div class="metrics" style="font-size:0.65em; margin-top:8px; border-top:1px solid #151515; padding-top:8px; display:flex; flex-direction:column; gap:5px;">
+                    <div style="color:#555; display:flex; justify-content:space-between; align-items:center;">
+                        <span>ST POSTURE:</span>
+                        <span style="color:${trendStyles.color}; font-size:1.3em; font-weight:bold;">${trendStyles.text}</span>
+                    </div>
+                    <div style="color:#555; display:flex; justify-content:space-between; align-items:center;">
+                        <span>LT CLOUD:</span>
+                        <span style="color:${cloudStyles.color}; font-size:1.3em; font-weight:bold;">${cloudStyles.text}</span>
+                    </div>
+                    <div style="color:#555; display:flex; justify-content:space-between; align-items:center;">
+                        <span>VALUE GAP:</span>
+                        <span class="${gapClass}" style="font-weight:bold; font-size:1.1em;">${val.valueGap}</span>
+                    </div>
+                    <div style="color:#555; display:flex; justify-content:space-between; align-items:center; border-top:1px dashed #1a1a1a; margin-top:2px; padding-top:4px;">
+                        <span>TREND AGE:</span>
+                        <span style="color:${ageColor}; font-weight:bold; font-size:1.3em; letter-spacing:0.5px;">${val.trendAge || 0}d</span>
+                    </div>
+                </div>
+            </div>`;
+        }).join('');
     }
 
-    // 2. GATE 1 RATE MOMENTUM MATRIX
-    const elTnx = document.getElementById('baro-tnx'); if (elTnx && tnxData) elTnx.innerText = tnxVal.toFixed(2) + "%";
-    const tnxFill = document.getElementById('tnx-tos-fill');
-    if (tnxFill && tnxData) tnxFill.style.cssText = getTosBarStyle(tnxData.currentPct);
-    const tnxL = document.getElementById('tnx-lbl-low'); if (tnxL && tnxData) tnxL.innerText = `L: ${tnxData.weekLow}%`;
-    const tnxH = document.getElementById('tnx-lbl-high'); if (tnxH && tnxData) tnxH.innerText = `H: ${tnxData.weekHigh}%`;
-    const tnxSmiLabel = document.getElementById('tnx-lbl-smi');
-    if (tnxSmiLabel && tnxData) {
-        const tProps = getTrendStatusProperties(tnxData.trend, true);
-        const tCloud = getCloudStructureProperties(tnxData.cloud);
-        tnxSmiLabel.innerHTML = `
-            ST POSTURE: <span style="font-size:1.1em; color:${tProps.color}; font-weight:bold; margin-right:12px;">${tProps.text}</span>
-            LT STRUCTURE: <span style="font-size:1.1em; color:${tCloud.color}; font-weight:bold;">${tCloud.text}</span>`;
-    }
-
-    // 2b. BINARY OPERATIONAL DIRECTIVE BOX OUTPUT
+    // 2b. RENDER BINARY OPERATIONAL DIRECTIVE BOX (WITH HIGH-VALUE REMINDER MAPPING)
     const summaryEl = document.getElementById('gate1-summary-directive');
     if (summaryEl) {
+        const globalDays = data.firewallAge || 0;
+        const durationColor = isSystemSafeToOperate ? "#00ff66" : "#ff3366";
+        const durationBadge = `<span style="float:right; font-size:0.85em; background:rgba(255,255,255,0.08); padding:2px 8px; border-radius:4px; color:${durationColor}; letter-spacing:1px;">ALIGNMENT AGE: ${globalDays} ${globalDays === 1 ? 'DAY' : 'DAYS'}</span>`;
+        
         if (isSystemSafeToOperate) {
-            summaryEl.innerText = "📋 DIRECTIVE: Market Favorable - Core Macro Signals Synchronized Below Kumo Cloud Ceiling";
-            summaryEl.style.cssText = "border:1px solid #007f4e; padding:14px; border-radius:6px; font-weight:bold; font-size:0.95em; text-align:center; letter-spacing:0.5px; background:#0a1910; color:#00ff66; box-shadow:0 0 10px rgba(0,255,102,0.15);";
+            summaryEl.innerHTML = `📋 DIRECTIVE: Market Favorable — Buy ONLY high value stocks that are rising. | Core Macro Signals Synchronized Below Tactical Thresholds ${durationBadge}`;
+            summaryEl.style.cssText = "border:1px solid #007f4e; padding:14px; border-radius:6px; font-weight:bold; font-size:0.95em; text-align:left; letter-spacing:0.5px; background:#0a1910; color:#00ff66; box-shadow:0 0 10px rgba(0,255,102,0.15);";
         } else {
-            summaryEl.innerText = "📋 DIRECTIVE: Market Unfavorable - Firewall Locked Down Against Structural Macro Stress";
-            summaryEl.style.cssText = "border:1px solid #b9001b; padding:14px; border-radius:6px; font-weight:bold; font-size:0.95em; text-align:center; letter-spacing:0.5px; background:#1a0d0f; color:#ff3366; box-shadow:0 0 12px rgba(255,51,102,0.2);";
+            summaryEl.innerHTML = `📋 DIRECTIVE: Market Unfavorable — Firewall Locked Down Against Structural Macro Stress ${durationBadge}`;
+            summaryEl.style.cssText = "border:1px solid #b9001b; padding:14px; border-radius:6px; font-weight:bold; font-size:0.95em; text-align:left; letter-spacing:0.5px; background:#1a0d0f; color:#ff3366; box-shadow:0 0 12px rgba(255,51,102,0.2);";
         }
     }
 
-    // 3. TIMING PANELS (PRE-MARKET FUTURES ACTIVE MATRIX)
+    // 3. RENDER TIMING PANELS (PRE-MARKET FUTURES ACTIVE MATRIX)
     const options = { timeZone: "America/New_York", hour: "numeric", minute: "numeric", hour12: false };
     const etParts = new Intl.DateTimeFormat([], options).formatToParts(new Date());
     const etTimeFloat = parseInt(etParts.find(p => p.type === "hour").value, 10) + (parseInt(etParts.find(p => p.type === "minute").value, 10) / 60);
@@ -133,7 +153,7 @@ function renderDashboard(data) {
         futuresPanel.style.display = "none";
     }
 
-    // 4. GATE 2 ROW GRID GENERATOR
+    // 4. RENDER GATE 2 BLOCK
     const us02yPrice = vixData ? (data.yield * 0.93).toFixed(2) + "%" : "4.17%";
     const isFloorHeld = parseFloat(us02yPrice) >= 3.75;
 
@@ -200,7 +220,7 @@ function renderDashboard(data) {
         gate2Grid.innerHTML = gate2Html;
     }
 
-    // 5. FIREWALL ALERTS
+    // 5. FIREWALL ALERTS DISPLAY CONTROL
     const coreIndices = ['SPY', 'DIA', 'QQQ', 'IWM'];
     const bearZoneCount = coreIndices.filter(ticker => data.indices[ticker] && parseFloat(data.indices[ticker].currentPct) < 50).length;
     const gate1AlertBox = document.getElementById('gate1-alert');
@@ -210,7 +230,7 @@ function renderDashboard(data) {
         if (isFirewallTripped) {
             gate1AlertBox.innerText = `🛑 CRITICAL FIREWALL BREACH: MACRO STRATA TREND REVERSAL DETECTED`;
             gate1AlertBox.style.cssText = "color:#ff3366; border-color:#ff3366; background:#1a0d0f; padding:12px; border-radius:6px; font-weight:bold; font-size:0.9em; letter-spacing:1px; text-align:center; margin-bottom:15px; box-shadow: 0 0 10px rgba(255,51,102,0.2);";
-            headlineElement.innerText = "FIREWALL SHUTDOWN CALIBRATED: MACRO RISK ENGINES PENETRATE KUMO CEILINGS. LONG TERMINAL EXECUTION SHUT DOWN.";
+            headlineElement.innerText = "FIREWALL SHUTDOWN CALIBRATED: MACRO RISK ENGINES BREACH SHORT TERM BOUNDARIES. LONG TERMINAL EXECUTION SHUT DOWN.";
         } else if (bearZoneCount >= 2) {
             gate1AlertBox.innerText = `🛑 TACTICAL RISK EXPOSURE ALERT: ${bearZoneCount} CORE INDICES IN BEAR CHANNELS`;
             gate1AlertBox.style.cssText = "color:#ff3366; border-color:#ff3366; background:#1a0d0f; padding:12px; border-radius:6px; font-weight:bold; font-size:0.9em; letter-spacing:1px; text-align:center; margin-bottom:15px;";
@@ -222,16 +242,27 @@ function renderDashboard(data) {
     
     if (tsEl) tsEl.innerText = "Last Intel Sync: " + data.ts;
 
-    // 6. MASTER GRID RENDERING LOOP (GATE 3 SYMMETRICAL MATRIX)[cite: 1]
+    // 6. RENDER GATE 3 ALPHA MATRICES
     const grid = document.getElementById('data-grid');
     if (grid) {
         const coreMarketTickers = ['SPY', 'DIA', 'QQQ', 'IWM'];
         const sectorPool = ["XLC", "XLY", "XLP", "XLE", "XLF", "XLV", "XLI", "XLK", "XLB", "XLRE", "XLU"];
 
-        // Extract active bullish sectors to map out row 2[cite: 1]
-        const activeSectors = sectorPool.filter(ticker => data.indices[ticker] && data.indices[ticker].trend === "Bullish");
+        const sectorNames = {
+            "XLC": "Comm Services",
+            "XLY": "Cons Discretionary",
+            "XLP": "Consumer Staples",
+            "XLE": "Energy",
+            "XLF": "Financials",
+            "XLV": "Health Care",
+            "XLI": "Industrials",
+            "XLK": "Technology",
+            "XLB": "Materials",
+            "XLRE": "Real Estate",
+            "XLU": "Utilities"
+        };
 
-        // Merge anchors and breakouts sequentially to preserve clean alignment[cite: 1]
+        const activeSectors = sectorPool.filter(ticker => data.indices[ticker] && data.indices[ticker].trend === "Bullish");
         const orderedRenderSequence = [...coreMarketTickers, ...activeSectors];
 
         grid.innerHTML = orderedRenderSequence.map(ticker => {
@@ -242,20 +273,22 @@ function renderDashboard(data) {
             const cloudStyles = getCloudStructureProperties(val.cloud);
             const isCoreIndex = coreMarketTickers.includes(ticker);
             
+            const displayTitle = isCoreIndex ? ticker : `${ticker} <span style="font-size:0.75em; color:#666; font-weight:normal;">(${sectorNames[ticker]})</span>`;
             const gapClass = parseFloat(val.valueGap) >= 0 ? 'gap-pos' : 'gap-neg';
             const priceColorClass = val.change5d >= 0 ? 'gap-pos' : 'gap-neg';
             const cardMomentumClass = val.change5d >= 0 ? 'up' : 'down';
             
-            // Symmetrical neon frame accents when momentum converges with long-term structure[cite: 1]
             const isFullyQualified = trendStyles.text === "BULLISH" && cloudStyles.valid;
-            const cardBorderAccent = isFullyQualified 
-                ? "border: 2px solid #00ffcc; box-shadow: 0 0 15px rgba(0,255,204,0.2);" 
+            const cardBorderAccent = isFullyQualified
+                ? "border: 2px solid #00ffcc; box-shadow: 0 0 15px rgba(0,255,204,0.2);"
                 : (isCoreIndex ? "border: 1px solid #333;" : "border: 1px solid #1a2925;");
+
+            const ageColor = val.trend === "Bullish" ? "#00ff66" : "#ff3366";
 
             return `
             <div class="card ${cardMomentumClass}" style="${cardBorderAccent}">
                 <div>
-                    <h3 style="color:#888; margin:0 0 5px 0; font-size:0.85em;">${ticker} ${isCoreIndex ? '<span style="color:#555; font-size:0.8em; font-weight:normal;">[INDEX]</span>' : ''}</h3>
+                    <h3 style="color:#aaa; margin:0 0 5px 0; font-size:0.85em; letter-spacing:0.5px;">${displayTitle} ${isCoreIndex ? '<span style="color:#555; font-size:0.8em; font-weight:normal;">[INDEX]</span>' : ''}</h3>
                     <div class="price ${priceColorClass}" style="font-size:1.4em; font-weight:bold;">$${val.price}</div>
                 </div>
                 <div>
@@ -277,25 +310,21 @@ function renderDashboard(data) {
                         <span>LT CLOUD:</span>
                         <span style="color:${cloudStyles.color}; font-size:1.3em; font-weight:bold;">${cloudStyles.text}</span>
                     </div>
-                    <div style="display:flex; justify-content:space-between; margin-top:4px; color:#555;">
-                        <span>Value Gap: <span class="${gapClass}">${val.valueGap}</span></span>
+                    <div style="color:#555; display:flex; justify-content:space-between; align-items:center;">
+                        <span>VALUE GAP:</span>
+                        <span class="${gapClass}" style="font-weight:bold; font-size:1.1em;">${val.valueGap}</span>
+                    </div>
+                    <div style="color:#555; display:flex; justify-content:space-between; align-items:center; border-top:1px dashed #1a1a1a; margin-top:2px; padding-top:4px;">
+                        <span>TREND AGE:</span>
+                        <span style="color:${ageColor}; font-weight:bold; font-size:1.3em; letter-spacing:0.5px;">${val.trendAge || 0}d</span>
                     </div>
                 </div>
             </div>`;
         }).join('');
-
-        // Clean safety state fallback if absolutely zero sectors are printing a bullish signal
-        if (activeSectors.length === 0) {
-            // Renders indices on top still, but displays clear cash notice below
-            const macroIndicesHtml = coreMarketTickers.map(ticker => { /* Renders core index sub-block standalone if required */ }).join('');
-            // Optional: You can append an explicit "frozen" footer alert to the grid if desired.
-        }
     }
 
-    // 7. CLEAN REDUNDANCY ELIMINATION FIELD[cite: 1]
     const flowGrid = document.getElementById('money-flow-rank');
     if (flowGrid) {
-        // Complete structural removal of old text loop to maintain a sleek desktop presence[cite: 1]
         flowGrid.innerHTML = '';
         flowGrid.style.display = 'none';
     }

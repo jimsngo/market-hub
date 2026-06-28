@@ -10,59 +10,93 @@ const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
 // --- SURGICAL INDICATOR HELPERS ---
 
-// Upgraded Technical Ichimoku Engine incorporating 26-Period Forward Displaced Cloud
-function calculateIchimoku(history) {
-    const N = history.length;
-    // Requires a minimum of 78 bars to compute a 52-period Span B lookback from 26 days ago
-    if (N < 78) return { tenkan: 0, kijun: 0, trend: "Neutral", cloud: "Inside", distanceKijun: 0 };
+// Universal Multi-Regime Scanner: Maps dynamic filters directly by tactical role
+function getBinaryStateAt(history, idx, ticker) {
+    const slice9 = history.slice(Math.max(0, idx - 8), idx + 1);
+    const slice26 = history.slice(Math.max(0, idx - 25), idx + 1);
+    const price = history[idx].c;
 
-    // 1. TODAY'S EQUILIBRIUM VALUES
-    const slice9_today = history.slice(-9);   // Standard 9-period lookback
-    const slice26_today = history.slice(-26); // Standard 26-period lookback
+    const tenkan = (Math.max(...slice9.map(d => d.h)) + Math.min(...slice9.map(d => d.l))) / 2;
+    const kijun = (Math.max(...slice26.map(d => d.h)) + Math.min(...slice26.map(d => d.l))) / 2;
+
+    const isAboveST = (price > tenkan && price > kijun);
+
+    // ⚡ GATEKEEPER EXCLUSION GATE: VIX & TNX evaluate pure short-term posture thresholds for rapid defense
+    if (ticker === "VIX" || ticker === "TNX") {
+        return isAboveST ? "Bullish" : "Bearish";
+    }
+
+    // 2. STANDARD DUAL-CONTAINMENT RULE FOR ALL CORE INDICES AND SECTORS
+    if (idx < 78) {
+        return isAboveST ? "Bullish" : "Bearish"; // Safe historical lookback boundary fallback
+    }
+
+    const targetIdx = idx - 26;
+    const slice9_target = history.slice(targetIdx - 8, targetIdx + 1);
+    const slice26_target = history.slice(targetIdx - 25, targetIdx + 1);
+    const tenkan_target = (Math.max(...slice9_target.map(d => d.h)) + Math.min(...slice9_target.map(d => d.l))) / 2;
+    const kijun_target = (Math.max(...slice26_target.map(d => d.h)) + Math.min(...slice26_target.map(d => d.l))) / 2;
+    const spanA = (tenkan_target + kijun_target) / 2;
+
+    const slice52_target = history.slice(targetIdx - 51, targetIdx + 1);
+    const spanB = (Math.max(...slice52_target.map(d => d.h)) + Math.min(...slice52_target.map(d => d.l))) / 2;
+
+    const isAboveLT = (price > spanA && price > spanB);
+
+    return (isAboveST && isAboveLT) ? "Bullish" : "Bearish";
+}
+
+// Technical Evaluation Loop calculating contemporary and historical containment states
+function calculateIchimoku(history, ticker) {
+    const N = history.length;
+    if (N < 26) return { tenkan: 0, kijun: 0, trend: "Neutral", cloud: "Inside", distanceKijun: 0, trendAge: 0 };
+
+    const slice9_today = history.slice(-9);
+    const slice26_today = history.slice(-26);
     const currentPrice = history[N - 1].c;
 
     const tenkan = (Math.max(...slice9_today.map(d => d.h)) + Math.min(...slice9_today.map(d => d.l))) / 2;
     const kijun = (Math.max(...slice26_today.map(d => d.h)) + Math.min(...slice26_today.map(d => d.l))) / 2;
 
-    // 2. CORRECTION: 26-BAR HISTORICAL OFFSET FOR TODAY'S CLOUD BOUNDARIES
-    const targetIdx = N - 1 - 26;
+    // Extract dynamic contemporary binary status
+    const todayState = getBinaryStateAt(history, N - 1, ticker);
 
-    // Span A (Displaced 26 bars forward to represent today's floor): (Tenkan @ target + Kijun @ target) / 2
-    const slice9_target = history.slice(targetIdx - 8, targetIdx + 1);
-    const slice26_target = history.slice(targetIdx - 25, targetIdx + 1);
-
-    const tenkan_target = (Math.max(...slice9_target.map(d => d.h)) + Math.min(...slice9_target.map(d => d.l))) / 2;
-    const kijun_target = (Math.max(...slice26_target.map(d => d.h)) + Math.min(...slice26_target.map(d => d.l))) / 2;
-    const spanA = (tenkan_target + kijun_target) / 2;
-
-    // Span B (Displaced 26 bars forward to represent today's ceiling): 52-period midpoint ending at targetIdx
-    const slice52_target = history.slice(targetIdx - 51, targetIdx + 1);
-    const spanB = (Math.max(...slice52_target.map(d => d.h)) + Math.min(...slice52_target.map(d => d.l))) / 2;
-
-    // Short-Term Posture Status
-    let trend = "Neutral";
-    if (currentPrice > tenkan && currentPrice > kijun) {
-        trend = "Bullish";
-    } else if (currentPrice < tenkan && currentPrice < kijun) {
-        trend = "Bearish";
-    }
-
-    // Long-Term Kumo Cloud Position Status (Synced with thinkorswim ground truth)
+    // Track cloud positions cleanly purely to preserve layout string metrics on dashboard panels
     let cloud = "Inside";
-    if (currentPrice > spanA && currentPrice > spanB) {
-        cloud = "Above";
-    } else if (currentPrice < spanA && currentPrice < spanB) {
-        cloud = "Below";
+    if (N >= 78) {
+        const targetIdx = N - 1 - 26;
+        const slice9_target = history.slice(targetIdx - 8, targetIdx + 1);
+        const slice26_target = history.slice(targetIdx - 25, targetIdx + 1);
+        const tenkan_target = (Math.max(...slice9_target.map(d => d.h)) + Math.min(...slice9_target.map(d => d.l))) / 2;
+        const kijun_target = (Math.max(...slice26_target.map(d => d.h)) + Math.min(...slice26_target.map(d => d.l))) / 2;
+        const spanA = (tenkan_target + kijun_target) / 2;
+        const slice52_target = history.slice(targetIdx - 51, targetIdx + 1);
+        const spanB = (Math.max(...slice52_target.map(d => d.h)) + Math.min(...slice52_target.map(d => d.l))) / 2;
+
+        if (currentPrice > spanA && currentPrice > spanB) cloud = "Above";
+        else if (currentPrice < spanA && currentPrice < spanB) cloud = "Below";
+    } else {
+        cloud = currentPrice > kijun ? "Above" : "Below";
     }
 
-    // Normalized tracking calculation for sector rotation scoring 
+    // Stateless Backward Scanned Duration Engine mapped explicitly by asset routing rule
+    let trendAge = 0;
+    for (let i = N - 1; i >= 0; i--) {
+        if (getBinaryStateAt(history, i, ticker) === todayState) {
+            trendAge++;
+        } else {
+            break; 
+        }
+    }
+
     const distanceKijun = kijun !== 0 ? ((currentPrice - kijun) / kijun) * 100 : 0;
 
     return {
         tenkan: parseFloat(tenkan.toFixed(2)),
         kijun: parseFloat(kijun.toFixed(2)),
-        trend: trend,
+        trend: todayState, 
         cloud: cloud,
+        trendAge: trendAge,
         distanceKijun: parseFloat(distanceKijun.toFixed(2))
     };
 }
@@ -70,24 +104,21 @@ function calculateIchimoku(history) {
 // --- MAIN DATA ENGINE ---
 
 async function fetchMarketData(symbols) {
-    let results = { indices: {}, yield: 0, ts: new Date().toLocaleTimeString(), moneyFlow: [] };
+    let results = { indices: {}, yield: 0, firewallAge: 0, ts: new Date().toLocaleTimeString(), moneyFlow: [] };
+    let vixHistoryRef = null;
+    let tnxHistoryRef = null;
 
     for (let sym of symbols) {
         try {
-            await sleep(150); // Proxy firewall safety pacing
-
-            // OPTIMIZATION: Extended lookback range from 3mo to 6mo to capture deep historical cloud data
-            const targetUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${sym}?interval=1d&range=6mo`;
+            await sleep(150); 
+            const targetUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${sym}?interval=1d&range=1y`;
             let response, raw;
 
             try {
-                response = await fetch(PROXY + encodeURIComponent(targetUrl), {
-                    method: 'GET',
-                    redirect: 'follow'
-                });
+                response = await fetch(PROXY + encodeURIComponent(targetUrl), { method: 'GET', redirect: 'follow' });
                 raw = await response.json();
-            } catch (primaryError) {
-                console.warn(`Primary proxy failed for ${sym}. Triggering backup router...`);
+            } catch (e) {
+                console.warn(`Primary proxy routing error on ${sym}. Initializing fallback pipeline...`);
                 response = await fetch(BACKUP_PROXY + encodeURIComponent(targetUrl));
                 const wrappedData = await response.json();
                 raw = JSON.parse(wrappedData.contents);
@@ -102,10 +133,12 @@ async function fetchMarketData(symbols) {
                     c: ind.close[i], h: ind.high[i], l: ind.low[i]
                 })).filter(d => d.c !== null && d.h !== null && d.l !== null);
 
+                if (ticker === "VIX") vixHistoryRef = history;
+                if (ticker === "TNX") tnxHistoryRef = history;
+
                 const last = history[history.length - 1]; 
                 const prev = history[history.length - 2]; 
                 const smaValue = history.reduce((acc, val) => acc + val.c, 0) / history.length;
-                
                 const currentPrice = last.c;
                 
                 const last5Days = history.slice(-5);
@@ -114,14 +147,11 @@ async function fetchMarketData(symbols) {
                 
                 let currentPct = 50;
                 const weekRange = weekHigh - weekLow;
-                if (weekRange > 0) {
-                    currentPct = ((currentPrice - weekLow) / weekRange) * 100;
-                }
+                if (weekRange > 0) currentPct = ((currentPrice - weekLow) / weekRange) * 100;
                 currentPct = Math.max(0, Math.min(100, currentPct));
 
                 const changePct = ((last.c - prev.c) / prev.c * 100).toFixed(2);
-
-                const ichi = calculateIchimoku(history);
+                const ichi = calculateIchimoku(history, ticker);
 
                 results.indices[ticker] = {
                     price: currentPrice.toFixed(2),
@@ -130,7 +160,8 @@ async function fetchMarketData(symbols) {
                     tenkan: ichi.tenkan,
                     kijun: ichi.kijun,
                     trend: ichi.trend,
-                    cloud: ichi.cloud, // INJECTED TO REPAIR UI ALIGNMENT GAP
+                    cloud: ichi.cloud, 
+                    trendAge: ichi.trendAge, 
                     score: ichi.distanceKijun, 
                     conf: (currentPrice > smaValue && ichi.trend === "Bullish") ? "UP" : "DOWN",
                     valueGap: "N/A",
@@ -142,30 +173,50 @@ async function fetchMarketData(symbols) {
                 if (ticker === "TNX") results.yield = currentPrice;
             }
         } catch (e) { 
-            console.error(`Complete pipeline drop for symbol ${sym}:`, e); 
+            console.error(`Pipeline drop for symbol ${sym}:`, e); 
         }
     }
 
-    // Apply baseline valuation gaps
+    // Synchronize Firewall Durations based on collective threat containment continuity
+    if (vixHistoryRef && tnxHistoryRef && results.indices["VIX"] && results.indices["TNX"]) {
+        const systemSafeToday = (results.indices["VIX"].trend === "Bearish") && (results.indices["TNX"].trend === "Bearish");
+        let firewallAge = 0;
+        const minLen = Math.min(vixHistoryRef.length, tnxHistoryRef.length);
+
+        for (let offset = 0; offset < minLen; offset++) {
+            const vixIdx = vixHistoryRef.length - 1 - offset;
+            const tnxIdx = tnxHistoryRef.length - 1 - offset;
+            if (vixIdx < 0 || tnxIdx < 0) break;
+
+            const vState = getBinaryStateAt(vixHistoryRef, vixIdx, "VIX");
+            const tState = getBinaryStateAt(tnxHistoryRef, tnxIdx, "TNX");
+            const sysSafe = (vState === "Bearish" && tState === "Bearish");
+
+            if (sysSafe === systemSafeToday) {
+                firewallAge++;
+            } else {
+                break;
+            }
+        }
+        results.firewallAge = firewallAge;
+    }
+
+    // Set value gap frameworks
     Object.keys(results.indices).forEach(key => {
         const cfg = indexConfigs[key];
         if (cfg && cfg.pe > 0 && key !== 'TNX') {
             const earningsYield = (100 / cfg.pe);
-            const gap = (earningsYield - results.yield).toFixed(2);
-            results.indices[key].valueGap = gap + "%";
+            results.indices[key].valueGap = (earningsYield - results.yield).toFixed(2) + "%";
         }
     });
 
     if (results.indices["GLD"] && results.yield > 0) {
-        const gldEarningsYield = (100 / 22.5); 
-        results.indices["GLD"].valueGap = (gldEarningsYield - results.yield * 0.93).toFixed(2) + "%";
+        results.indices["GLD"].valueGap = ((100 / 22.5) - results.yield * 0.93).toFixed(2) + "%";
     }
     if (results.indices["SLV"] && results.yield > 0) {
-        const slvEarningsYield = (100 / 25.0); 
-        results.indices["SLV"].valueGap = (slvEarningsYield - results.yield * 0.93).toFixed(2) + "%";
+        results.indices["SLV"].valueGap = ((100 / 25.0) - results.yield * 0.93).toFixed(2) + "%";
     }
 
-    // EXPANDED SCORING MATRIX: Evaluates all 11 core sectors for money flow rankings
     const sectors = ["XLC", "XLY", "XLP", "XLE", "XLF", "XLV", "XLI", "XLK", "XLB", "XLRE", "XLU"];
     results.moneyFlow = sectors
         .filter(s => results.indices[s])
