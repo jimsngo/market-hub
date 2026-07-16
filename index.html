@@ -16,63 +16,102 @@
                 <h1 style="margin:0; letter-spacing:3px;">SURGICAL HUB</h1>
                 <div id="clock" style="color:#666;">00:00:00</div>
             </div>
-            <div style="text-align:right;">
+            <div style="text-align:right; display: flex; flex-direction: column; align-items: flex-end; gap: 5px;">
                 <div id="timestamp" style="font-size:0.8em; margin-bottom:5px; color:#444;">Awaiting Intel...</div>
-                <button id="sync-btn">Refresh Theatre</button>
+                <div style="display: flex; gap: 8px;">
+                    <button id="tab-macro" class="console-tab active" onclick="switchView('macro')">🛡️ FIREWALL</button>
+                    <button id="tab-val" class="console-tab" onclick="switchView('val')">📊 VALUATIONS</button>
+                    <button id="sync-btn">Refresh Theatre</button>
+                </div>
             </div>
         </header>
 
-        <div class="gate-container" style="background:#0c0c0c; border:1px solid #222; border-radius:8px; padding:20px; margin-bottom:15px;">
-            <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #222; padding-bottom:10px; margin-bottom:15px;">
-                <span style="font-size:0.75em; letter-spacing:2px; color:#ff3366; font-weight:bold;">🛡️ GATE 1: MY FIREWALL (MACRO THREAT ASSESSMENT)</span>
-                <span id="barometer-date" style="font-size:0.75em; color:#555;"></span>
-            </div>
+        <!-- ================= MACRO MONITOR VIEW ================= -->
+        <div id="macro-view">
+            <div class="gate-container" style="background:#0c0c0c; border:1px solid #222; border-radius:8px; padding:20px; margin-bottom:15px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #222; padding-bottom:10px; margin-bottom:15px;">
+                    <span style="font-size:0.75em; letter-spacing:2px; color:#ff3366; font-weight:bold;">🛡️ GATE 1: MY FIREWALL (MACRO THREAT ASSESSMENT)</span>
+                    <span id="barometer-date" style="font-size:0.75em; color:#555;"></span>
+                </div>
 
-            <div id="gate1-alert" style="border:1px solid #333; padding:12px; border-radius:6px; font-weight:bold; font-size:0.9em; letter-spacing:1px; text-align:center; margin-bottom:15px; background:#111;">
-                CALCULATING THEATRE WEATHER CONDITIONS...
-            </div>
+                <div id="gate1-alert" style="border:1px solid #333; padding:12px; border-radius:6px; font-weight:bold; font-size:0.9em; letter-spacing:1px; text-align:center; margin-bottom:15px; background:#111;">
+                    CALCULATING THEATRE WEATHER CONDITIONS...
+                </div>
 
-            <div style="margin-bottom:20px;">
-                <div style="font-size:0.65em; color:#555; letter-spacing:1px; margin-bottom:5px;">REGIME ANALYSIS HEADLINE</div>
-                <h2 id="barometer-headline" style="margin:0; font-weight:normal; color:#fff; font-size:1.15em; line-height:1.5; letter-spacing:0.5px;">
-                    Awaiting market engine calculation...
-                </h2>
-            </div>
-            
-            <div id="premarket-futures-panel" style="display:none; margin-bottom:15px; padding:12px; background:#111; border:1px solid #ffcc00; border-radius:6px;">
-                <div style="font-size:0.65em; color:#ffcc00; letter-spacing:1px; font-weight:bold; margin-bottom:10px;">⏰ LIVE PRE-MARKET FUTURES ACTIVE (4:00 AM - 9:30 AM ET)</div>
-                <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap:15px;">
-                    <div style="background:#050505; padding:8px; border-radius:4px; border:2px solid #222;">
-                        <div style="font-size:0.6em; color:#888;">S&P 500 FUTURES (ES=F)</div>
-                        <div id="baro-es-futures" style="font-size:1.1em; font-weight:bold; color:#fff; margin-top:3px;">--</div>
-                    </div>
-                    <div style="background:#050505; padding:8px; border-radius:4px; border:2px solid #222;">
-                        <div style="font-size:0.6em; color:#888;">RUSSELL 2000 FUTURES (RTY=F)</div>
-                        <div id="baro-rty-futures" style="font-size:1.1em; font-weight:bold; color:#fff; margin-top:3px;">--</div>
+                <div style="margin-bottom:20px;">
+                    <div style="font-size:0.65em; color:#555; letter-spacing:1px; margin-bottom:5px;">REGIME ANALYSIS HEADLINE</div>
+                    <h2 id="barometer-headline" style="margin:0; font-weight:normal; color:#fff; font-size:1.15em; line-height:1.5; letter-spacing:0.5px;">
+                        Awaiting market engine calculation...
+                    </h2>
+                </div>
+                
+                <div id="premarket-futures-panel" style="display:none; margin-bottom:15px; padding:12px; background:#111; border:1px solid #ffcc00; border-radius:6px;">
+                    <div style="font-size:0.65em; color:#ffcc00; letter-spacing:1px; font-weight:bold; margin-bottom:10px;">⏰ LIVE PRE-MARKET FUTURES ACTIVE (4:00 AM - 9:30 AM ET)</div>
+                    <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap:15px;">
+                        <div style="background:#050505; padding:8px; border-radius:4px; border:2px solid #222;">
+                            <div style="font-size:0.6em; color:#888;">S&P 500 FUTURES (ES=F)</div>
+                            <div id="baro-es-futures" style="font-size:1.1em; font-weight:bold; color:#fff; margin-top:3px;">--</div>
+                        </div>
+                        <div style="background:#050505; padding:8px; border-radius:4px; border:2px solid #222;">
+                            <div style="font-size:0.6em; color:#888;">RUSSELL 2000 FUTURES (RTY=F)</div>
+                            <div id="baro-rty-futures" style="font-size:1.1em; font-weight:bold; color:#fff; margin-top:3px;">--</div>
+                        </div>
                     </div>
                 </div>
-            </div>
-            
-            <!-- UPGRADED CORE MACRO GRID: Dynamically populates high-fidelity postcards -->
-            <div id="gate1-macro-grid" class="grid" style="margin-bottom: 15px;"></div>
+                
+                <!-- UPGRADED CORE MACRO GRID: Dynamically populates high-fidelity postcards -->
+                <div id="gate1-macro-grid" class="grid" style="margin-bottom: 15px;"></div>
 
-            <div id="gate1-summary-directive" style="border:1px solid #1c1c1c; padding:14px; border-radius:6px; font-weight:bold; font-size:0.95em; text-align:center; letter-spacing:0.5px; background:#0a0a0a; color:#555;">
-                Awaiting Macro Evaluation Drivers...
+                <div id="gate1-summary-directive" style="border:1px solid #1c1c1c; padding:14px; border-radius:6px; font-weight:bold; font-size:0.95em; text-align:center; letter-spacing:0.5px; background:#0a0a0a; color:#555;">
+                    Awaiting Macro Evaluation Drivers...
+                </div>
             </div>
+
+            <div class="gate-container" style="background:#0c0c0c; border:1px solid #222; border-radius:8px; padding:20px; margin-bottom:25px;">
+                <div style="border-bottom:1px solid #222; padding-bottom:10px; margin-bottom:15px;">
+                    <span style="font-size:0.75em; letter-spacing:2px; color:#ffcc00; font-weight:bold;">🏛️ GATE 2: CAPITAL GRAVITY & HARD ASSETS (YIELD TREND FILTER)</span>
+                </div>
+                <div id="gate2-grid" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap:15px;"></div>
+            </div>
+
+            <div class="flow-container">
+                <div id="money-flow-rank" class="flow-grid"></div>
+            </div>
+
+            <div id="data-grid" class="grid"></div>
         </div>
 
-        <div class="gate-container" style="background:#0c0c0c; border:1px solid #222; border-radius:8px; padding:20px; margin-bottom:25px;">
-            <div style="border-bottom:1px solid #222; padding-bottom:10px; margin-bottom:15px;">
-                <span style="font-size:0.75em; letter-spacing:2px; color:#ffcc00; font-weight:bold;">🏛️ GATE 2: CAPITAL GRAVITY & HARD ASSETS (YIELD TREND FILTER)</span>
+        <!-- ================= VALUATION ENGINE VIEW ================= -->
+        <div id="val-view" style="display:none;">
+            <div class="gate-container" style="background:#0c0c0c; border:1px solid #222; border-radius:8px; padding:20px; margin-bottom:25px;">
+                <div style="border-bottom:1px solid #222; padding-bottom:10px; margin-bottom:15px; display:flex; justify-content:space-between; align-items:center;">
+                    <span style="font-size:0.75em; letter-spacing:2px; color:#ffcc00; font-weight:bold;">📊 GATE 3: ASSET MULTIPLES & VALUATION DESK</span>
+                    <span id="valuation-sync-status" style="font-size:0.7em; color:#555; font-family:monospace; font-weight:bold;">AWAITING DATA SYNC...</span>
+                </div>
+                <div style="overflow-x:auto;">
+                    <table class="val-table" style="width:100%; border-collapse:collapse; font-size:0.9em; text-align:left;">
+                        <thead>
+                            <tr style="border-bottom:2px solid #1c1c1c;">
+                                <th style="font-size:0.7em; text-transform:uppercase; letter-spacing:1.5px; color:#555; padding:12px;">Asset Symbol</th>
+                                <th style="font-size:0.7em; text-transform:uppercase; letter-spacing:1.5px; color:#555; padding:12px;">Live Price</th>
+                                <th style="font-size:0.7em; text-transform:uppercase; letter-spacing:1.5px; color:#555; padding:12px;">Trailing P/E</th>
+                                <th style="font-size:0.7em; text-transform:uppercase; letter-spacing:1.5px; color:#555; padding:12px;">Forward P/E</th>
+                                <th style="font-size:0.7em; text-transform:uppercase; letter-spacing:1.5px; color:#555; padding:12px;">PEG Ratio</th>
+                                <th style="font-size:0.7em; text-transform:uppercase; letter-spacing:1.5px; color:#555; padding:12px;">Alloc %</th>
+                                <th style="font-size:0.7em; text-transform:uppercase; letter-spacing:1.5px; color:#555; padding:12px;">Active Directives & Notes</th>
+                            </tr>
+                        </thead>
+                        <tbody id="valuation-table-body">
+                            <tr>
+                                <td colspan="7" style="text-align: center; color: #555; padding: 40px; font-family: monospace;">
+                                    Data compiling... Please check that fetch_valuations.py has executed.
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
-            <div id="gate2-grid" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap:15px;"></div>
         </div>
-
-        <div class="flow-container">
-            <div id="money-flow-rank" class="flow-grid"></div>
-        </div>
-
-        <div id="data-grid" class="grid"></div>
 
         <div style="margin-top:20px; border-top:1px solid #1c1c1c; padding-top:10px; display:flex; justify-content:space-between; align-items:center;">
             <span style="font-size:0.6em; color:#3a3a3a; letter-spacing:1px; font-weight:bold;">⚙️ DAILY TACTICAL RE-CALIBRATION ACTIVE</span>

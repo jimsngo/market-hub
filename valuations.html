@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Surgical Hub | Valuation Console</title>
+    <style>
+        body {
+            background-color: #050505;
+            color: #d1d1d1;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+        .theatre-container {
+            max-width: 1024px;
+            margin: 0 auto;
+            box-sizing: border-box;
+            padding: 20px;
+        }
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #222;
+            padding-bottom: 15px;
+            margin-bottom: 25px;
+        }
+        h1 {
+            color: #fff;
+            font-size: 1.5em;
+            margin: 0;
+            letter-spacing: 3px;
+        }
+        .subtitle {
+            font-size: 0.75em;
+            color: #666;
+            letter-spacing: 1px;
+            margin-top: 5px;
+        }
+        .console-box {
+            background: #0c0c0c;
+            border: 1px solid #222;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 25px;
+        }
+        .console-header {
+            font-size: 0.8em;
+            letter-spacing: 2px;
+            color: #ff3366;
+            font-weight: bold;
+            border-bottom: 1px solid #222;
+            padding-bottom: 10px;
+            margin-bottom: 15px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9em;
+            text-align: left;
+        }
+        th {
+            font-size: 0.7em;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: #555;
+            padding: 12px;
+            border-bottom: 2px solid #1c1c1c;
+        }
+        td {
+            padding: 14px 12px;
+            border-bottom: 1px solid #111;
+        }
+        tr:hover {
+            background: #111;
+        }
+        .symbol-badge {
+            font-weight: bold;
+            color: #fff;
+            font-family: monospace;
+            letter-spacing: 1px;
+        }
+        .badge-proxy {
+            font-size: 0.7em;
+            color: #ffcc00;
+            background: #1f1a00;
+            border: 1px solid #473e0a;
+            padding: 2px 6px;
+            border-radius: 4px;
+            margin-left: 8px;
+        }
+        .val-high {
+            color: #ff3366; /* High P/E (U.S.) */
+        }
+        .val-low {
+            color: #00ff66; /* Cheap/Value P/E (Asia) */
+            font-weight: bold;
+        }
+        .badge-allocation {
+            background: #111;
+            border: 1px solid #222;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-family: monospace;
+            color: #888;
+        }
+        .btn-sync {
+            background: #111;
+            border: 1px solid #333;
+            color: #aaa;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.8em;
+            letter-spacing: 1px;
+            transition: 0.2s ease;
+        }
+        .btn-sync:hover {
+            border-color: #ff3366;
+            color: #fff;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="theatre-container">
+        <header>
+            <div>
+                <h1>VALUATION ENGINE</h1>
+                <div class="subtitle">TACTICAL RISK & MULTIPLE MULTIPLIER CORE</div>
+            </div>
+            <div>
+                <button class="btn-sync" onclick="loadValuationData()">Reload Console</button>
+            </div>
+        </header>
+
+        <div class="console-box">
+            <div class="console-header">📊 SYSTEM REGIME VALUATION TABLE</div>
+            <table id="valuation-table">
+                <thead>
+                    <tr>
+                        <th>Asset Symbol</th>
+                        <th>Live Price</th>
+                        <th>Trailing P/E</th>
+                        <th>Forward P/E</th>
+                        <th>PEG Ratio</th>
+                        <th>Alloc %</th>
+                        <th>Active Directives & Notes</th>
+                    </tr>
+                </thead>
+                <tbody id="table-body">
+                    <tr>
+                        <td colspan="7" style="text-align: center; color: #555; padding: 40px;">
+                            No compiled data payload found. Run fetch_valuations.py first.
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        async function loadValuationData() {
+            const tableBody = document.getElementById("table-body");
+            try {
+                // Fetch the JSON dataset compiled by the Python script
+                const response = await fetch("market_valuations.json");
+                if (!response.ok) throw new Error("Dataset payload not updated.");
+                
+                const data = await response.json();
+                tableBody.innerHTML = ""; // Clear loader
+                
+                data.forEach(item => {
+                    const row = document.createElement("tr");
+                    
+                    // Format styling for P/E visual hierarchy
+                    let peClass = "val-high";
+                    const fpe = parseFloat(item.forward_pe);
+                    if (!isNaN(fpe) && fpe < 12.0) {
+                        peClass = "val-low"; // Flag deep value multiples (KORU, YINN)
+                    } else if (!isNaN(fpe) && fpe >= 12.0 && fpe <= 22.0) {
+                        peClass = ""; // Neutral baseline
+                    }
+
+                    row.innerHTML = `
+                        <td>
+                            <span class="symbol-badge">${item.symbol}</span>
+                            ${item.proxy ? `<span class="badge-proxy">Proxy: ${item.proxy}</span>` : ""}
+                        </td>
+                        <td style="font-family: monospace;">$${item.price}</td>
+                        <td style="font-family: monospace;">${item.trailing_pe}${item.trailing_pe !== 'N/A' ? 'x' : ''}</td>
+                        <td style="font-family: monospace;" class="${peClass}">${item.forward_pe}${item.forward_pe !== 'N/A' ? 'x' : ''}</td>
+                        <td style="font-family: monospace;">${item.peg_ratio}</td>
+                        <td><span class="badge-allocation">${item.allocation}</span></td>
+                        <td style="color: #888; font-size: 0.9em;">${item.notes}</td>
+                    `;
+                    tableBody.appendChild(row);
+                });
+            } catch (error) {
+                console.error("Valuation retrieval error:", error);
+                tableBody.innerHTML = `
+                    <tr>
+                        <td colspan="7" style="text-align: center; color: #ff3366; padding: 40px; font-weight: bold;">
+                            Error: Could not locate 'market_valuations.json'. Please check that your Python pipeline ran successfully.
+                        </td>
+                    </tr>`;
+            }
+        }
+
+        // Auto initialization on console mount
+        window.addEventListener("DOMContentLoaded", loadValuationData);
+    </script>
+</body>
+</html>

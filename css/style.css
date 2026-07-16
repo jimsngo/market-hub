@@ -119,3 +119,44 @@ body {
 .news-item { padding: 12px 0; border-bottom: 1px solid #222; }
 .news-item a { color: var(--news-link); text-decoration: none; font-size: 1rem; font-weight: 500; }
 .news-item a:hover { color: var(--gold); text-decoration: underline; }
+/* --- CONSOLE VIEW TAB SELECTORS (OPTION A) --- */
+.console-tab {
+    background: #080808;
+    border: 1px solid #1c1c1c;
+    color: #555;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.8em;
+    letter-spacing: 1px;
+    font-weight: bold;
+    transition: all 0.2s ease;
+}
+
+.console-tab:hover {
+    border-color: #333;
+    color: #888;
+}
+
+.console-tab.active {
+    background: #111 !important;
+    border-color: #ff3366 !important; /* Highlights active console view with matching Pink accent */
+    color: #fff !important;
+    box-shadow: 0 0 8px rgba(255, 51, 102, 0.15);
+}
+
+/* --- DETAILED PORTFOLIO VALUATION MATRIX --- */
+.val-table {
+    border-collapse: collapse;
+    width: 100%;
+}
+
+.val-table th {
+    font-family: 'Inter', sans-serif;
+    border-bottom: 2px solid #1c1c1c;
+}
+
+.val-table tr:hover {
+    background: #111;
+    transition: background 0.15s ease-in-out;
+}

@@ -4,6 +4,29 @@ function updateClock() {
 }
 setInterval(updateClock, 1000);
 
+// VIEW TOGGLE LOGIC (OPTION A)
+function switchView(viewName) {
+    const macroView = document.getElementById('macro-view');
+    const valView = document.getElementById('val-view');
+    const tabMacro = document.getElementById('tab-macro');
+    const tabVal = document.getElementById('tab-val');
+    
+    if (!macroView || !valView) return;
+    
+    if (viewName === 'macro') {
+        macroView.style.display = 'block';
+        valView.style.display = 'none';
+        if (tabMacro) tabMacro.classList.add('active');
+        if (tabVal) tabVal.classList.remove('active');
+    } else {
+        macroView.style.display = 'none';
+        valView.style.display = 'block';
+        if (tabMacro) tabMacro.classList.remove('active');
+        if (tabVal) tabVal.classList.add('active');
+        fetchValuationData();
+    }
+}
+
 async function triggerSync() {
     const btn = document.getElementById('sync-btn');
     if (btn) btn.innerText = "SYNCING...";
@@ -16,8 +39,70 @@ async function triggerSync() {
         const data = await fetchMarketData(symbols);
         localStorage.setItem('surgicalData', JSON.stringify(data));
         renderDashboard(data);
+        fetchValuationData(); // Also sync local valuations
     } catch (e) { console.error(e); }
     if (btn) btn.innerText = "Refresh Theatre";
+}
+
+// LOCAL VALUATION ENGINE DATA PARSER
+async function fetchValuationData() {
+    const tbody = document.getElementById('valuation-table-body');
+    const statusEl = document.getElementById('valuation-sync-status');
+    if (!tbody) return;
+    
+    try {
+        const response = await fetch('market_valuations.json');
+        if (!response.ok) throw new Error("Database offline");
+        const data = await response.json();
+        
+        tbody.innerHTML = '';
+        if (statusEl) {
+            statusEl.innerText = "LOCAL PAYLOAD SYNCHRONIZED";
+            statusEl.style.color = "#00ffcc";
+        }
+        
+        data.forEach(item => {
+            const row = document.createElement('tr');
+            row.style.borderBottom = "1px solid #111";
+            
+            // Visual indicators based on multiples
+            let peClass = "";
+            const fpe = parseFloat(item.forward_pe);
+            if (!isNaN(fpe)) {
+                if (fpe <= 12.0) peClass = "gap-pos"; // Deep Value (Green)
+                else if (fpe >= 25.0) peClass = "gap-neg"; // Premium Tech (Red)
+            }
+            
+            const proxyBadge = item.proxy 
+                ? `<span style="font-size: 0.7em; color: #ffcc00; background: #1f1a00; border: 1px solid #473e0a; padding: 2px 6px; border-radius: 4px; margin-left: 8px; font-family: monospace;">PROXY: ${item.proxy}</span>` 
+                : "";
+                
+            row.innerHTML = `
+                <td style="padding: 14px 12px; font-weight: bold; color: #fff; font-family: monospace; letter-spacing: 1px;">
+                    ${item.symbol} ${proxyBadge}
+                </td>
+                <td style="padding: 14px 12px; font-family: monospace;">$${item.price}</td>
+                <td style="padding: 14px 12px; font-family: monospace;">${item.trailing_pe}${item.trailing_pe !== 'N/A' && item.trailing_pe !== 'Error' ? 'x' : ''}</td>
+                <td style="padding: 14px 12px; font-family: monospace;" class="${peClass}">${item.forward_pe}${item.forward_pe !== 'N/A' && item.forward_pe !== 'Error' ? 'x' : ''}</td>
+                <td style="padding: 14px 12px; font-family: monospace;">${item.peg_ratio}</td>
+                <td style="padding: 14px 12px;"><span style="background: #111; border: 1px solid #222; padding: 3px 8px; border-radius: 4px; font-family: monospace; color: #888;">${item.allocation}</span></td>
+                <td style="padding: 14px 12px; color: #888; font-size: 0.9em;">${item.notes}</td>
+            `;
+            tbody.appendChild(row);
+        });
+    } catch (err) {
+        console.error("Valuation retrieval exception:", err);
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="7" style="text-align: center; color: #ff3366; padding: 40px; font-weight: bold; font-family: monospace;">
+                    ⚠️ OFFLINE: RUN python fetch_valuations.py TO COMPILE LOCAL DATASETS
+                </td>
+            </tr>`;
+        if (statusEl) {
+            statusEl.innerText = "DATA PAYLOAD OFFLINE";
+            statusEl.style.color = "#ff3366";
+        }
+    }
 }
 
 function getTrendStatusProperties(trend, isMacroGate = false) {
@@ -54,13 +139,11 @@ function renderDashboard(data) {
     const esData = data.indices["ES=F"];
     const rtyData = data.indices["RTY=F"];
 
-    // SYSTEM SAFETY CONFIGURATION: Clear runway mapped entirely to Bearish short-term trends for BOTH VIX & TNX
     const isVixSafe = (vixData && vixData.trend === "Bearish");
     const isTnxSafe = (tnxData && tnxData.trend === "Bearish");
     const isSystemSafeToOperate = (isVixSafe && isTnxSafe);
     const isFirewallTripped = !isSystemSafeToOperate;
 
-    // 1 & 2. RENDER GATE 1 MACRO CARDS
     const gate1MacroGrid = document.getElementById('gate1-macro-grid');
     if (gate1MacroGrid) {
         const macroConfig = [
@@ -77,8 +160,6 @@ function renderDashboard(data) {
             const gapClass = parseFloat(val.valueGap) >= 0 ? 'gap-pos' : 'gap-neg';
             const priceColorClass = val.change5d >= 0 ? 'gap-pos' : 'gap-neg';
             const cardMomentumClass = val.change5d >= 0 ? 'up' : 'down';
-            
-            // INTUITIVE RISK COLOR-CODING: Bearish trend means threat reduction (Green), Bullish means breach (Red)
             const ageColor = val.trend === "Bearish" ? "#00ff66" : "#ff3366";
 
             return `
@@ -119,7 +200,6 @@ function renderDashboard(data) {
         }).join('');
     }
 
-    // 2b. RENDER BINARY OPERATIONAL DIRECTIVE BOX (WITH HIGH-VALUE REMINDER MAPPING)
     const summaryEl = document.getElementById('gate1-summary-directive');
     if (summaryEl) {
         const globalDays = data.firewallAge || 0;
@@ -135,7 +215,6 @@ function renderDashboard(data) {
         }
     }
 
-    // 3. RENDER TIMING PANELS (PRE-MARKET FUTURES ACTIVE MATRIX)
     const options = { timeZone: "America/New_York", hour: "numeric", minute: "numeric", hour12: false };
     const etParts = new Intl.DateTimeFormat([], options).formatToParts(new Date());
     const etTimeFloat = parseInt(etParts.find(p => p.type === "hour").value, 10) + (parseInt(etParts.find(p => p.type === "minute").value, 10) / 60);
@@ -153,7 +232,6 @@ function renderDashboard(data) {
         futuresPanel.style.display = "none";
     }
 
-    // 4. RENDER GATE 2 BLOCK
     const us02yPrice = vixData ? (data.yield * 0.93).toFixed(2) + "%" : "4.17%";
     const isFloorHeld = parseFloat(us02yPrice) >= 3.75;
 
@@ -220,7 +298,6 @@ function renderDashboard(data) {
         gate2Grid.innerHTML = gate2Html;
     }
 
-    // 5. FIREWALL ALERTS DISPLAY CONTROL
     const coreIndices = ['SPY', 'DIA', 'QQQ', 'IWM'];
     const bearZoneCount = coreIndices.filter(ticker => data.indices[ticker] && parseFloat(data.indices[ticker].currentPct) < 50).length;
     const gate1AlertBox = document.getElementById('gate1-alert');
@@ -242,7 +319,6 @@ function renderDashboard(data) {
     
     if (tsEl) tsEl.innerText = "Last Intel Sync: " + data.ts;
 
-    // 6. RENDER GATE 3 ALPHA MATRICES
     const grid = document.getElementById('data-grid');
     if (grid) {
         const coreMarketTickers = ['SPY', 'DIA', 'QQQ', 'IWM'];
@@ -335,6 +411,7 @@ window.onload = () => {
     if (saved) {
         try { renderDashboard(JSON.parse(saved)); } catch (e) { console.error(e); }
     }
+    fetchValuationData(); // Load valuations on start
     setTimeout(triggerSync, 500);
     setInterval(triggerSync, 5 * 60 * 1000); 
     const syncBtn = document.getElementById('sync-btn');

@@ -1,0 +1,152 @@
+[
+    {
+        "symbol": "YINN",
+        "proxy": "FXI",
+        "price": 34.53,
+        "trailing_pe": 9.52,
+        "forward_pe": "\u2014",
+        "peg_ratio": "\u2014",
+        "allocation": "N/A",
+        "notes": "Auto-Mapped: FTSE China 50 Index (3x Bull) (Proxy: FXI)"
+    },
+    {
+        "symbol": "NAIL",
+        "proxy": null,
+        "price": 45.13,
+        "trailing_pe": 14.89,
+        "forward_pe": "\u2014",
+        "peg_ratio": "\u2014",
+        "allocation": "N/A",
+        "notes": "Direxion Daily Homebuilders & S | Trading--Leveraged Equity"
+    },
+    {
+        "symbol": "AMZU",
+        "proxy": null,
+        "price": 36.32,
+        "trailing_pe": 34.66,
+        "forward_pe": "\u2014",
+        "peg_ratio": "\u2014",
+        "allocation": "N/A",
+        "notes": "Direxion Daily AMZN Bull 2X ETF | Trading--Leveraged Equity"
+    },
+    {
+        "symbol": "DBA",
+        "proxy": null,
+        "price": 27.59,
+        "trailing_pe": 11.65,
+        "forward_pe": "\u2014",
+        "peg_ratio": "\u2014",
+        "allocation": "N/A",
+        "notes": "Invesco DB Agriculture Fund | Commodities Focused"
+    },
+    {
+        "symbol": "EUFN",
+        "proxy": null,
+        "price": 40.38,
+        "trailing_pe": 13.32,
+        "forward_pe": "\u2014",
+        "peg_ratio": "\u2014",
+        "allocation": "N/A",
+        "notes": "iShares MSCI Europe Financials  | Europe Stock"
+    },
+    {
+        "symbol": "IDEF",
+        "proxy": null,
+        "price": 31.11,
+        "trailing_pe": 31.1,
+        "forward_pe": "\u2014",
+        "peg_ratio": "\u2014",
+        "allocation": "N/A",
+        "notes": "iShares Defense Industrials Act | Industrials"
+    },
+    {
+        "symbol": "TQQQ",
+        "proxy": "QQQ",
+        "price": 705.94,
+        "trailing_pe": 31.33,
+        "forward_pe": "\u2014",
+        "peg_ratio": "\u2014",
+        "allocation": "N/A",
+        "notes": "Auto-Mapped: Nasdaq 100 Index (3x Bull) (Proxy: QQQ)"
+    },
+    {
+        "symbol": "TSLL",
+        "proxy": null,
+        "price": 12.02,
+        "trailing_pe": 50.92,
+        "forward_pe": "\u2014",
+        "peg_ratio": "\u2014",
+        "allocation": "N/A",
+        "notes": "Direxion Daily TSLA Bull 2X ETF | Trading--Leveraged Equity"
+    },
+    {
+        "symbol": "NUGT",
+        "proxy": null,
+        "price": 103.93,
+        "trailing_pe": 12.04,
+        "forward_pe": "\u2014",
+        "peg_ratio": "\u2014",
+        "allocation": "N/A",
+        "notes": "Direxion Daily Gold Miners Inde | Trading--Leveraged Equity"
+    },
+    {
+        "symbol": "GDXU",
+        "proxy": null,
+        "price": 69.89,
+        "trailing_pe": 11.02,
+        "forward_pe": "\u2014",
+        "peg_ratio": "\u2014",
+        "allocation": "N/A",
+        "notes": "MicroSectors Gold Miners 3X Lev | Trading--Leveraged Commodities"
+    },
+    {
+        "symbol": "SOXL",
+        "proxy": "SOXX",
+        "price": 530.5,
+        "trailing_pe": 37.5,
+        "forward_pe": "\u2014",
+        "peg_ratio": "\u2014",
+        "allocation": "N/A",
+        "notes": "Auto-Mapped: Semiconductor Index (3x Bull) (Proxy: SOXX)"
+    },
+    {
+        "symbol": "KORU",
+        "proxy": "EWY",
+        "price": 163.36,
+        "trailing_pe": 16.15,
+        "forward_pe": "\u2014",
+        "peg_ratio": "\u2014",
+        "allocation": "N/A",
+        "notes": "Auto-Mapped: MSCI South Korea Index (3x Bull) (Proxy: EWY)"
+    },
+    {
+        "symbol": "NVDA",
+        "proxy": null,
+        "price": 207.4,
+        "trailing_pe": 31.81,
+        "forward_pe": 16.2,
+        "peg_ratio": 0.65,
+        "allocation": "N/A",
+        "notes": "NVIDIA Corporation | Technology"
+    },
+    {
+        "symbol": "META",
+        "proxy": null,
+        "price": 664.54,
+        "trailing_pe": 24.15,
+        "forward_pe": 18.29,
+        "peg_ratio": 0.96,
+        "allocation": "N/A",
+        "notes": "Meta Platforms, Inc. | Communication Services"
+    },
+    {
+        "symbol": "AAPL",
+        "proxy": null,
+        "price": 333.26,
+        "trailing_pe": 40.4,
+        "forward_pe": 34.64,
+        "peg_ratio": 2.54,
+        "allocation": "N/A",
+        "notes": "Apple Inc. | Technology"
+    }
+]
